@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter/material.dart';
@@ -32,11 +31,19 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final UserMappings _userMappings = UserMappings();
+  late final RollMarking _rollMarking;
+  final GlobalKey<_RollMarkingState> _rollMarkingKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _userMappings.loadData();
+    _rollMarking = RollMarking(
+        userMappings: _userMappings,
+        onAddAttendee: (String id) {
+          setState(() {});
+        },
+        key: _rollMarkingKey);
   }
 
   @override
@@ -47,14 +54,17 @@ class _HomeState extends State<Home> {
       ),
       body: ListView(
         children: [
+          _rollMarking,
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SearchCadet(
               userMappings: _userMappings,
-            ), //SearchBar(),
+              rollMarking: _rollMarking,
+            ),
           ),
           Scanner(
             userMappings: _userMappings,
+            rollMarking: _rollMarking,
           ),
         ],
       ),
@@ -88,10 +98,59 @@ class UserMappings {
   }
 }
 
+class RollMarking extends StatefulWidget {
+  final UserMappings userMappings;
+  final void Function(String) onAddAttendee;
+  final GlobalKey<_RollMarkingState> key;
+
+  const RollMarking(
+      {required this.userMappings,
+      required this.onAddAttendee,
+      required this.key})
+      : super(key: key);
+
+  @override
+  State<RollMarking> createState() => _RollMarkingState();
+
+  void addAttendee(String id) {
+    _RollMarkingState state = key.currentState!;
+    state.addAttendee(id);
+  }
+}
+
+class _RollMarkingState extends State<RollMarking> {
+  final Set<String> _attended = {};
+  String _lastSuccessfulMark = "";
+
+  void addAttendee(String id) {
+    setState(() {
+      _attended.add(id);
+      _lastSuccessfulMark = widget.userMappings.getName(id);
+    });
+    widget.onAddAttendee(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.teal.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      padding: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.all(8.0),
+      child: Text('last successful mark: $_lastSuccessfulMark'),
+    );
+  }
+}
+
 class SearchCadet extends StatefulWidget {
   final UserMappings userMappings;
+  final RollMarking rollMarking;
 
-  const SearchCadet({Key? key, required this.userMappings}) : super(key: key);
+  const SearchCadet(
+      {Key? key, required this.userMappings, required this.rollMarking})
+      : super(key: key);
 
   @override
   State<SearchCadet> createState() => _SearchCadetState();
@@ -114,6 +173,7 @@ class _SearchCadetState extends State<SearchCadet> {
       onSelected: (String selection) {
         debugPrint('You just selected $selection');
         debugPrint(widget.userMappings.getId(selection));
+        widget.rollMarking.addAttendee(widget.userMappings.getId(selection));
       },
       fieldViewBuilder: (BuildContext context,
           TextEditingController textEditingController,
@@ -127,7 +187,8 @@ class _SearchCadetState extends State<SearchCadet> {
                 controller: textEditingController,
                 focusNode: focusNode,
                 onSubmitted: (String value) {
-                  onFieldSubmitted();
+                  widget.rollMarking
+                      .addAttendee(widget.userMappings.getId(value));
                 },
               ),
             ),
@@ -146,8 +207,11 @@ class _SearchCadetState extends State<SearchCadet> {
 
 class Scanner extends StatefulWidget {
   final UserMappings userMappings;
+  final RollMarking rollMarking;
 
-  const Scanner({Key? key, required this.userMappings}) : super(key: key);
+  const Scanner(
+      {Key? key, required this.userMappings, required this.rollMarking})
+      : super(key: key);
 
   @override
   _ScannerState createState() => _ScannerState();
@@ -243,6 +307,7 @@ class _ScannerState extends State<Scanner> {
                       setState(() {
                         _lastScannedCode =
                             widget.userMappings.getName('${barcode.rawValue}');
+                        widget.rollMarking.addAttendee('${barcode.rawValue}');
                       });
                     }
                   }
