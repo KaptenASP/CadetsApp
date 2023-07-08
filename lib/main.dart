@@ -31,6 +31,14 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final UserMappings _userMappings = UserMappings();
+
+  @override
+  void initState() {
+    super.initState();
+    _userMappings.loadData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,10 +46,12 @@ class _HomeState extends State<Home> {
         title: const Text("Cadet Attendance Scanner"),
       ),
       body: ListView(
-        children: const [
+        children: [
           Padding(
             padding: EdgeInsets.all(16.0),
-            child: SearchCadet(), //SearchBar(),
+            child: SearchCadet(
+              userMappings: _userMappings,
+            ), //SearchBar(),
           ),
           Scanner(),
         ],
@@ -50,36 +60,38 @@ class _HomeState extends State<Home> {
   }
 }
 
+class UserMappings {
+  Map<String, String> _data = {};
+  final Map<String, String> _reversed = {};
+  final List<String> _options = [];
+
+  Future<void> loadData() async {
+    String data = await rootBundle.loadString('assets/mapper.json');
+    final jsonResult = jsonDecode(data);
+    _data = Map<String, String>.from(jsonResult);
+    for (var element in _data.entries) {
+      _reversed.putIfAbsent(element.value.toLowerCase(), () => element.key);
+      _options.add(element.value.toLowerCase());
+    }
+  }
+
+  List<String> get options => _options;
+
+  String getId(String full) {
+    return _reversed[full] ?? "";
+  }
+}
+
 class SearchCadet extends StatefulWidget {
-  const SearchCadet({super.key});
+  final UserMappings userMappings;
+
+  SearchCadet({Key? key, required this.userMappings}) : super(key: key);
 
   @override
   State<SearchCadet> createState() => _SearchCadetState();
 }
 
 class _SearchCadetState extends State<SearchCadet> {
-  Map<String, String> _data = {};
-  final Map<String, String> _reversed = {};
-  List<String> options = [];
-
-  Future<void> getSavedData() async {
-    String data = await rootBundle.loadString('assets/mapper.json');
-    final jsonResult = jsonDecode(data); //latest Dart
-    setState(() {
-      _data = Map<String, String>.from(jsonResult);
-      for (var element in _data.entries) {
-        _reversed.putIfAbsent(element.value.toLowerCase(), () => element.key);
-        options.add(element.value.toLowerCase());
-      }
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getSavedData();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Autocomplete<String>(
@@ -87,13 +99,13 @@ class _SearchCadetState extends State<SearchCadet> {
         if (textEditingValue.text == '') {
           return const Iterable<String>.empty();
         }
-        return options.where((String option) {
+        return widget.userMappings.options.where((String option) {
           return option.contains(textEditingValue.text.toLowerCase());
         });
       },
       onSelected: (String selection) {
         debugPrint('You just selected $selection');
-        debugPrint(_reversed[selection]);
+        debugPrint(widget.userMappings.getId(selection));
       },
     );
   }
