@@ -48,12 +48,14 @@ class _HomeState extends State<Home> {
       body: ListView(
         children: [
           Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: SearchCadet(
               userMappings: _userMappings,
             ), //SearchBar(),
           ),
-          Scanner(),
+          Scanner(
+            userMappings: _userMappings,
+          ),
         ],
       ),
     );
@@ -80,18 +82,24 @@ class UserMappings {
   String getId(String full) {
     return _reversed[full] ?? "";
   }
+
+  String getName(String id) {
+    return _data[id] ?? "";
+  }
 }
 
 class SearchCadet extends StatefulWidget {
   final UserMappings userMappings;
 
-  SearchCadet({Key? key, required this.userMappings}) : super(key: key);
+  const SearchCadet({Key? key, required this.userMappings}) : super(key: key);
 
   @override
   State<SearchCadet> createState() => _SearchCadetState();
 }
 
 class _SearchCadetState extends State<SearchCadet> {
+  final TextEditingController _textEditingController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Autocomplete<String>(
@@ -107,12 +115,39 @@ class _SearchCadetState extends State<SearchCadet> {
         debugPrint('You just selected $selection');
         debugPrint(widget.userMappings.getId(selection));
       },
+      fieldViewBuilder: (BuildContext context,
+          TextEditingController textEditingController,
+          FocusNode focusNode,
+          VoidCallback onFieldSubmitted) {
+        _textEditingController.value = textEditingController.value;
+        return Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                onSubmitted: (String value) {
+                  onFieldSubmitted();
+                },
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                textEditingController.clear();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class Scanner extends StatefulWidget {
-  const Scanner({super.key});
+  final UserMappings userMappings;
+
+  const Scanner({Key? key, required this.userMappings}) : super(key: key);
 
   @override
   _ScannerState createState() => _ScannerState();
@@ -170,7 +205,7 @@ class _ScannerState extends State<Scanner> {
             ),
             padding: const EdgeInsets.all(8.0),
             margin: const EdgeInsets.all(8.0),
-            child: Text('Last successfully scanned code: $_lastScannedCode'),
+            child: Text('Last successfully saved: $_lastScannedCode'),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -204,10 +239,10 @@ class _ScannerState extends State<Scanner> {
                   final List<Barcode> barcodes = capture.barcodes;
                   for (final barcode in barcodes) {
                     debugPrint('Barcode found! ${barcode.rawValue}');
-                    _lastScannedCode = '${barcode.rawValue}';
                     if (_barcodes.add('${barcode.rawValue}')) {
                       setState(() {
-                        _lastScannedCode = barcode.rawValue;
+                        _lastScannedCode =
+                            widget.userMappings.getName('${barcode.rawValue}');
                       });
                     }
                   }
