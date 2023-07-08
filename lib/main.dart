@@ -101,6 +101,7 @@ class UserMappings {
 class RollMarking extends StatefulWidget {
   final UserMappings userMappings;
   final void Function(String) onAddAttendee;
+  @override
   final GlobalKey<_RollMarkingState> key;
 
   const RollMarking(
