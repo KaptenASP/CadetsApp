@@ -9,17 +9,12 @@ class Rolls {
 
   Future<void> loadData() async {
     // Get the documents directory path
-    print("Starting");
     final directory = await getApplicationDocumentsDirectory();
     final filePath = '${directory.path}/rolls.json';
-
-    print("Got filepath");
 
     // Check if the file exists
     final file = File(filePath);
     final fileExists = await file.exists();
-
-    print(fileExists);
 
     if (fileExists) {
       String data = await file.readAsString();
@@ -77,14 +72,19 @@ class Rolls {
     return Set<String>.from(_rolls[rollname]?['attended'] as Iterable);
   }
 
+  Set<String> getAttendedNames(String rollname) {
+    return Set<String>.from(_rolls[rollname]?['attended']
+        ?.map((e) => UserMappings.getName(e)) as Iterable);
+  }
+
   Map<String, dynamic> get rolls => _rolls;
   List<String> get rollnames => _rollNames;
 }
 
 class UserMappings {
-  Map<String, String> _data = {};
-  final Map<String, String> _reversed = {};
-  final List<String> _options = [];
+  static Map<String, String> _data = {};
+  static final Map<String, String> _reversed = {};
+  static final List<String> _options = [];
 
   Future<void> loadData() async {
     String data = await rootBundle.loadString('assets/mapper.json');
@@ -98,11 +98,11 @@ class UserMappings {
 
   List<String> get options => _options;
 
-  String getId(String full) {
+  static String getId(String full) {
     return _reversed[full] ?? "";
   }
 
-  String getName(String id) {
+  static String getName(String id) {
     return _data[id] ?? "";
   }
 }

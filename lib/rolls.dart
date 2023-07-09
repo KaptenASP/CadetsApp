@@ -54,11 +54,14 @@ class _RollHomeState extends State<RollHome> {
           ),
           ListView.builder(
             shrinkWrap: true,
-            itemCount: widget.rolls.getAttended(widget.rollname).length,
+            itemCount: widget.rolls.getAttendedNames(widget.rollname).length,
             itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(
-                    widget.rolls.getAttended(widget.rollname).elementAt(index)),
+              return Card(
+                child: ListTile(
+                  title: Text(widget.rolls
+                      .getAttendedNames(widget.rollname)
+                      .elementAt(index)),
+                ),
               );
             },
           ),
@@ -102,15 +105,19 @@ class _RollMarkingState extends State<RollMarking> {
     super.initState();
     _attended = widget.rolls.getAttended(widget.rollname);
     _lastSuccessfulMark =
-        _attended.isNotEmpty ? widget.userMappings.getName(_attended.last) : '';
+        _attended.isNotEmpty ? UserMappings.getName(_attended.last) : '';
   }
 
   void addAttendee(String id) {
     setState(() {
+      if (UserMappings.getName(id) == '') {
+        return;
+      }
+
       if (_attended.add(id)) {
         widget.rolls.saveId(widget.rollname, id);
       }
-      _lastSuccessfulMark = widget.userMappings.getName(id);
+      _lastSuccessfulMark = UserMappings.getName(id);
     });
     widget.onAddAttendee(id);
   }
@@ -157,8 +164,8 @@ class _SearchCadetState extends State<SearchCadet> {
       },
       onSelected: (String selection) {
         debugPrint('You just selected $selection');
-        debugPrint(widget.userMappings.getId(selection));
-        widget.rollMarking.addAttendee(widget.userMappings.getId(selection));
+        debugPrint(UserMappings.getId(selection));
+        widget.rollMarking.addAttendee(UserMappings.getId(selection));
       },
       fieldViewBuilder: (BuildContext context,
           TextEditingController textEditingController,
@@ -172,8 +179,7 @@ class _SearchCadetState extends State<SearchCadet> {
                 controller: textEditingController,
                 focusNode: focusNode,
                 onSubmitted: (String value) {
-                  widget.rollMarking
-                      .addAttendee(widget.userMappings.getId(value));
+                  widget.rollMarking.addAttendee(UserMappings.getId(value));
                 },
               ),
             ),
@@ -291,7 +297,7 @@ class _ScannerState extends State<Scanner> {
                     if (_barcodes.add('${barcode.rawValue}')) {
                       setState(() {
                         _lastScannedCode =
-                            widget.userMappings.getName('${barcode.rawValue}');
+                            UserMappings.getName('${barcode.rawValue}');
                         widget.rollMarking.addAttendee('${barcode.rawValue}');
                       });
                     }
