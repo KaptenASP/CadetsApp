@@ -1,10 +1,12 @@
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'Helpers/storage_helper.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter/material.dart';
 
 class RollHome extends StatefulWidget {
-  const RollHome({super.key});
+  final String rollname;
+  final Rolls rolls;
+  const RollHome({Key? key, required this.rollname, required this.rolls})
+      : super(key: key);
 
   @override
   State<RollHome> createState() => _RollHomeState();
@@ -21,6 +23,8 @@ class _RollHomeState extends State<RollHome> {
     _userMappings.loadData();
     _rollMarking = RollMarking(
         userMappings: _userMappings,
+        rolls: widget.rolls,
+        rollname: widget.rollname,
         onAddAttendee: (String id) {
           setState(() {});
         },
@@ -31,10 +35,11 @@ class _RollHomeState extends State<RollHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cadet Attendance Scanner"),
+        title: const Text('Cadet Attendance Scanner'),
       ),
       body: ListView(
         children: [
+          Text(widget.rollname),
           _rollMarking,
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -47,47 +52,35 @@ class _RollHomeState extends State<RollHome> {
             userMappings: _userMappings,
             rollMarking: _rollMarking,
           ),
+          ListView.builder(
+            shrinkWrap: true,
+            itemCount: widget.rolls.getAttended(widget.rollname).length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(
+                    widget.rolls.getAttended(widget.rollname).elementAt(index)),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 }
 
-class UserMappings {
-  Map<String, String> _data = {};
-  final Map<String, String> _reversed = {};
-  final List<String> _options = [];
-
-  Future<void> loadData() async {
-    String data = await rootBundle.loadString('assets/mapper.json');
-    final jsonResult = jsonDecode(data);
-    _data = Map<String, String>.from(jsonResult);
-    for (var element in _data.entries) {
-      _reversed.putIfAbsent(element.value.toLowerCase(), () => element.key);
-      _options.add(element.value.toLowerCase());
-    }
-  }
-
-  List<String> get options => _options;
-
-  String getId(String full) {
-    return _reversed[full] ?? "";
-  }
-
-  String getName(String id) {
-    return _data[id] ?? "";
-  }
-}
-
 class RollMarking extends StatefulWidget {
   final UserMappings userMappings;
   final void Function(String) onAddAttendee;
+  final Rolls rolls;
+  final String rollname;
   @override
   final GlobalKey<_RollMarkingState> key;
 
   const RollMarking(
       {required this.userMappings,
       required this.onAddAttendee,
+      required this.rolls,
+      required this.rollname,
       required this.key})
       : super(key: key);
 
@@ -101,12 +94,22 @@ class RollMarking extends StatefulWidget {
 }
 
 class _RollMarkingState extends State<RollMarking> {
-  final Set<String> _attended = {};
+  Set<String> _attended = {};
   String _lastSuccessfulMark = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _attended = widget.rolls.getAttended(widget.rollname);
+    _lastSuccessfulMark =
+        _attended.isNotEmpty ? widget.userMappings.getName(_attended.last) : '';
+  }
 
   void addAttendee(String id) {
     setState(() {
-      _attended.add(id);
+      if (_attended.add(id)) {
+        widget.rolls.saveId(widget.rollname, id);
+      }
       _lastSuccessfulMark = widget.userMappings.getName(id);
     });
     widget.onAddAttendee(id);

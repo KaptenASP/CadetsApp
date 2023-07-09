@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'rolls.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'Helpers/storage_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,11 +29,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Rolls rolls = Rolls();
+  final Rolls _rolls = Rolls();
+  late List<String> _rollnames = [];
+  TextEditingController rollNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _rolls.loadData().then((value) {
+      _rollnames = _rolls.rollnames;
+      setState(() {});
+    });
+  }
+
+  void createRoll(String rollname) {
+    _rolls.createRoll(rollname);
+    _rollnames = _rolls.rollnames;
+    setState(() {});
+  }
+
+  void deleteRoll(String rollname) {
+    _rolls.deleteRoll(rollname);
+    _rollnames = _rolls.rollnames;
+    setState(() {});
   }
 
   @override
@@ -42,44 +59,105 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Cadets V2.0"),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+                title: const Text('Enter Roll Name'),
+                content: TextFormField(
+                  controller: rollNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'Roll Name',
+                  ),
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some text';
+                    }
+                    return null;
+                  },
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      createRoll(rollNameController.text);
+                      Navigator.pop(context, 'OK');
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            ),
+            child: const Text('Create Roll'),
+          ),
+          TextButton(
+            onPressed: () => showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+                title: const Text('Enter Roll Name To Confirm Delete'),
+                content: TextFormField(
+                  controller: rollNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'Roll Name',
+                  ),
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some text';
+                    }
+                    return null;
+                  },
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      deleteRoll(rollNameController.text);
+                      Navigator.pop(context, 'OK');
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            ),
+            child: const Text('Delete roll'),
+          ),
+        ],
       ),
-      body: FutureBuilder<void>(
-        future: rolls.loadData(),
-        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error loading data'));
-          } else {
-            return ListView(
-              scrollDirection: Axis.vertical,
-              children: rolls.rollnames
-                  .map((e) => ElevatedButton(
-                        child: Text(e),
-                        onPressed: () {},
-                      ))
-                  .toList(),
-            );
-          }
-        },
+      body: ListView(
+        scrollDirection: Axis.vertical,
+        children: _rollnames
+            .map((e) => Card(
+                  clipBehavior: Clip.hardEdge,
+                  child: InkWell(
+                    splashColor: Colors.blue.withAlpha(30),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => RollHome(
+                                  rollname: e,
+                                  rolls: _rolls,
+                                )),
+                      );
+                      debugPrint('card name: $e');
+                      debugPrint('Card tapped.');
+                    },
+                    child: SizedBox(
+                      width: 300,
+                      height: 100,
+                      child: Center(child: Text(e)),
+                    ),
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
-}
-
-class Rolls {
-  Map<String, dynamic> _rolls = {};
-  final List<String> _rollNames = [];
-
-  Future<void> loadData() async {
-    String data = await rootBundle.loadString('assets/rolls.json');
-    final jsonResult = jsonDecode(data);
-    _rolls = Map<String, dynamic>.from(jsonResult);
-    _rolls.forEach((key, value) {
-      _rollNames.add(key);
-    });
-  }
-
-  Map<String, dynamic> get rolls => _rolls;
-  List<String> get rollnames => _rollNames;
 }
