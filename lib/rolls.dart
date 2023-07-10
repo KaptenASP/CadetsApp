@@ -13,14 +13,17 @@ class RollHome extends StatefulWidget {
 }
 
 class _RollHomeState extends State<RollHome> {
-  final UserMappings _userMappings = UserMappings();
+  static final UserMappings _userMappings = UserMappings();
   late final RollMarking _rollMarking;
   final GlobalKey<_RollMarkingState> _rollMarkingKey = GlobalKey();
+  int index = 0;
 
   @override
   void initState() {
     super.initState();
-    _userMappings.loadData();
+    _userMappings.loadData().then((value) {
+      setState(() {});
+    });
     _rollMarking = RollMarking(
         userMappings: _userMappings,
         rolls: widget.rolls,
@@ -37,39 +40,61 @@ class _RollHomeState extends State<RollHome> {
       appBar: AppBar(
         title: const Text('Cadet Attendance Scanner'),
       ),
-      body: ListView(
-        children: [
-          Text(widget.rollname),
-          Text(widget.rolls.getExpectedNames(widget.rollname).toString()),
-          _rollMarking,
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SearchCadet(
-              userMappings: _userMappings,
-              rollMarking: _rollMarking,
+      body: Stack(children: <Widget>[
+        Offstage(
+          offstage: index != 0,
+          child: TickerMode(
+            enabled: index == 0,
+            child: ListView(
+              children: [
+                Text(widget.rollname),
+                _rollMarking,
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SearchCadet(
+                    userMappings: _userMappings,
+                    rollMarking: _rollMarking,
+                  ),
+                ),
+                Scanner(
+                  userMappings: _userMappings,
+                  rollMarking: _rollMarking,
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount:
+                      widget.rolls.getAttendedNames(widget.rollname).length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(widget.rolls
+                            .getAttendedNames(widget.rollname)
+                            .elementAt(index)),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-          Scanner(
-            userMappings: _userMappings,
-            rollMarking: _rollMarking,
+        ),
+        Offstage(
+          offstage: index != 1,
+          child: TickerMode(
+            enabled: index == 1,
+            child:
+                Text(widget.rolls.getExpectedNames(widget.rollname).toString()),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            itemCount: widget.rolls.getAttendedNames(widget.rollname).length,
-            itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(
-                  title: Text(widget.rolls
-                      .getAttendedNames(widget.rollname)
-                      .elementAt(index)),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        )
+      ]),
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
+        currentIndex: index,
+        onTap: (int index) {
+          setState(() {
+            this.index = index;
+          });
+        },
+        items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: 'info'),
         ],

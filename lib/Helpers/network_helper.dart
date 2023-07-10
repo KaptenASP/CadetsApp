@@ -90,9 +90,10 @@ class CadetNetSession extends http.BaseClient {
 }
 
 class Session {
-  var client = CadetNetSession();
-  var api = CadetnetApi();
+  static var client = CadetNetSession();
+  static var api = CadetnetApi();
 
+  // Auth based calls
   Future<void> getCookies() async {
     await client.get(
       Uri.parse(api.getBaseCookies.url),
@@ -113,6 +114,7 @@ class Session {
     );
   }
 
+  // User based calls
   Future<Map> getDetails() async {
     http.Response response = await client.get(
       Uri.parse(api.getUserDetails.url),
@@ -122,6 +124,17 @@ class Session {
     return json.decode(response.body);
   }
 
+  Future<Map> getUserMapping() async {
+    http.Response response = await client.post(
+      Uri.parse(api.postUserMapping.url),
+      headers: api.postUserMapping.headers,
+      body: json.encode(api.postUserMapping.data),
+    );
+
+    return json.decode(response.body);
+  }
+
+  // Activity Based Calls
   Future<Map> getActivities() async {
     http.Response response = await client.post(
       Uri.parse(api.postActivities.url),

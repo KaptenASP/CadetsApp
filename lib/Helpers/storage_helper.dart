@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cadets/Constants/cadetnet_api.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -45,8 +44,11 @@ class Rolls {
       (jsonResult as Map<String, dynamic>).forEach((key, value) {
         value = (value as Map<String, dynamic>);
 
-        Roll roll = Roll(key, value['synced'] as bool,
-            Set<String>.from(value['attended']), {});
+        Roll roll = Roll(
+            key,
+            value['synced'] as bool,
+            Set<String>.from(value['attended']),
+            Set<String>.from(value['expected']));
         _rolls[key] = roll;
         _rollNames.add(key);
       });
@@ -57,21 +59,22 @@ class Rolls {
     session.getCookies().then((value) =>
         session.login().then((value) => session.getActivities().then((value) {
               value["DataList"].forEach((entry) {
-                print(entry);
+                // print(entry);
                 APIPostRequest req =
-                    CadetnetApi.getActivityAttendees(entry["Id"] as int);
+                    CadetnetApi.postActivityAttendees(entry["Id"] as int);
 
                 session.getActivityAttendees(req).then((memberValues) {
                   Set<String> ids = {};
 
                   memberValues["DataList"].forEach((member) {
-                    ids.add("${member['Id']}");
+                    ids.add(
+                        "${member['Member']['MemberDisplay'].split(' - ')[1]}");
                   });
 
-                  print('IDS == $ids');
+                  // print('IDS == $ids');
 
                   createRoll(entry["Name"], synced: true, expected: ids);
-                  print(_rolls[entry["Name"]]?.toJson());
+                  // print(_rolls[entry["Name"]]?.toJson());
                 });
               });
             })));
@@ -81,6 +84,7 @@ class Rolls {
       {bool synced = false, Set<String>? expected}) async {
     if (_rolls.containsKey(rollname)) {
       _rolls[rollname]?.synced = synced;
+      _rolls[rollname]?.expected.clear();
       _rolls[rollname]?.expected.addAll(expected ?? {});
       _saveToJson();
       return;
@@ -108,15 +112,15 @@ class Rolls {
   }
 
   Future<void> _saveToJson() async {
-    Map<String, dynamic> _rollsJsonified = {};
+    Map<String, dynamic> rollsJsonified = {};
 
     for (MapEntry<String, Roll> element in _rolls.entries) {
-      _rollsJsonified.addAll({element.key: element.value.toJson()});
+      rollsJsonified.addAll({element.key: element.value.toJson()});
     }
 
-    print(_rollsJsonified);
+    // print(rollsJsonified);
 
-    final jsonData = json.encode(_rollsJsonified);
+    final jsonData = json.encode(rollsJsonified);
 
     // Get the documents directory path
     final directory = await getApplicationDocumentsDirectory();
@@ -141,7 +145,7 @@ class Rolls {
   Set<String> getExpectedNames(String rollname) {
     return _rolls[rollname]!
         .expected
-        // .map((e) => UserMappings.getName(e))
+        .map((e) => UserMappings.getName(e))
         .toSet();
   }
 
@@ -153,15 +157,60 @@ class UserMappings {
   static Map<String, String> _data = {};
   static final Map<String, String> _reversed = {};
   static final List<String> _options = [];
+  final Session session = Session();
 
   Future<void> loadData() async {
-    String data = await rootBundle.loadString('assets/mapper.json');
-    final jsonResult = jsonDecode(data);
-    _data = Map<String, String>.from(jsonResult);
-    for (var element in _data.entries) {
-      _reversed.putIfAbsent(element.value.toLowerCase(), () => element.key);
-      _options.add(element.value.toLowerCase());
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/mapper.json';
+
+    // Check if the file exists
+    final file = File(filePath);
+    final fileExists = await file.exists();
+
+    if (fileExists) {
+      String data = await file.readAsString();
+      final jsonResult = jsonDecode(data);
+      _data = Map<String, String>.from(jsonResult);
+      for (var element in _data.entries) {
+        _reversed.putIfAbsent(element.value.toLowerCase(), () => element.key);
+        _options.add(element.value.toLowerCase());
+      }
+    } else {
+      await loadOnlineData();
     }
+  }
+
+  Future<void> loadOnlineData() async {
+    session.getCookies().then(
+          (value) => session.login().then(
+                (value) => session.getUserMapping().then(
+                  (value) {
+                    value["DataList"].forEach((member) {
+                      _data.addAll({
+                        member["MemberDisplay"].split(" - ")[1]:
+                            member["MemberDisplay"]
+                      });
+                    });
+
+                    for (var element in _data.entries) {
+                      _reversed.putIfAbsent(
+                          element.value.toLowerCase(), () => element.key);
+                      _options.add(element.value.toLowerCase());
+                    }
+                  },
+                ),
+              ),
+        );
+
+    final jsonData = json.encode(_data);
+
+    // Get the documents directory path
+    final directory = await getApplicationDocumentsDirectory();
+    final filePath = '${directory.path}/mapper.json';
+
+    // Write the JSON data to the file
+    final file = File(filePath);
+    await file.writeAsString(jsonData);
   }
 
   List<String> get options => _options;

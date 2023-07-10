@@ -39,9 +39,9 @@ class _HomePageState extends State<HomePage> {
       setState(() {});
     });
 
-    _rolls.loadOnlineData().then((value) {
-      setState(() {});
-    });
+    // _rolls.loadOnlineData().then((value) {
+    //   setState(() {});
+    // });
   }
 
   void createRoll(String rollname) {
