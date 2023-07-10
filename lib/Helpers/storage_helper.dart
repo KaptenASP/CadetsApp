@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cadets/Constants/cadetnet_api.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'network_helper.dart';
@@ -20,6 +19,15 @@ class Roll {
         'attended': attended.toList(),
         'expected': expected.toList(),
       };
+
+  static Roll fromJson(MapEntry<String, dynamic> json) {
+    return Roll(
+      json.key,
+      json.value['synced'] as bool,
+      Set<String>.from(json.value['attended']),
+      Set<String>.from(json.value['expected']),
+    );
+  }
 }
 
 class Rolls {
@@ -41,17 +49,10 @@ class Rolls {
       final jsonResult = jsonDecode(data);
 
       // Add casted entries into _rolls:
-      (jsonResult as Map<String, dynamic>).forEach((key, value) {
-        value = (value as Map<String, dynamic>);
-
-        Roll roll = Roll(
-            key,
-            value['synced'] as bool,
-            Set<String>.from(value['attended']),
-            Set<String>.from(value['expected']));
-        _rolls[key] = roll;
-        _rollNames.add(key);
-      });
+      for (var entry in (jsonResult as Map<String, dynamic>).entries) {
+        _rolls[entry.key] = Roll.fromJson(entry);
+        _rollNames.add(entry.key);
+      }
     }
   }
 
@@ -71,10 +72,9 @@ class Rolls {
                         "${member['Member']['MemberDisplay'].split(' - ')[1]}");
                   });
 
-                  // print('IDS == $ids');
+                  print('IDS == $ids');
 
                   createRoll(entry["Name"], synced: true, expected: ids);
-                  // print(_rolls[entry["Name"]]?.toJson());
                 });
               });
             })));
