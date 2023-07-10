@@ -3,9 +3,12 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'network_helper.dart';
+
 class Rolls {
   final Map<String, Map<String, List<String>>> _rolls = {};
   final List<String> _rollNames = [];
+  final Session session = Session();
 
   Future<void> loadData() async {
     // Get the documents directory path
@@ -33,6 +36,18 @@ class Rolls {
         _rollNames.add(key);
       });
     }
+
+    loadOnlineData();
+  }
+
+  Future<void> loadOnlineData() async {
+    session.getCookies().then((value) =>
+        session.login().then((value) => session.getActivities().then((value) {
+              value["DataList"].forEach((entry) {
+                print(entry);
+                createRoll(entry["Name"]);
+              });
+            })));
   }
 
   void createRoll(String rollname) async {

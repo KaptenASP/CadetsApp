@@ -31,7 +31,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Rolls _rolls = Rolls();
-  final Session session = Session();
   late List<String> _rollnames = [];
   TextEditingController rollNameController = TextEditingController();
 
@@ -42,10 +41,6 @@ class _HomePageState extends State<HomePage> {
       _rollnames = _rolls.rollnames;
       setState(() {});
     });
-
-    session.getCookies().then((value) => session
-        .login()
-        .then((value) => session.getDetails().then((value) => print(value))));
   }
 
   void createRoll(String rollname) {
