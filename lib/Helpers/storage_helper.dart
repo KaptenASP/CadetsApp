@@ -146,6 +146,16 @@ class Rolls {
     return _rolls[rollname]!
         .expected
         .map((e) => UserMappings.getName(e))
+        .where((e) => e != "")
+        .toSet();
+  }
+
+  Set<String> getCadetsAway(String rollname) {
+    return _rolls[rollname]!
+        .expected
+        .difference(_rolls[rollname]!.attended)
+        .map((e) => UserMappings.getName(e))
+        .where((e) => e != "")
         .toSet();
   }
 

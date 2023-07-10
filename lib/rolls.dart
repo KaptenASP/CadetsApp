@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 class RollHome extends StatefulWidget {
   final String rollname;
   final Rolls rolls;
+
   const RollHome({Key? key, required this.rollname, required this.rolls})
       : super(key: key);
 
@@ -17,6 +18,7 @@ class _RollHomeState extends State<RollHome> {
   late final RollMarking _rollMarking;
   final GlobalKey<_RollMarkingState> _rollMarkingKey = GlobalKey();
   int index = 0;
+  bool viewAwayCadets = false;
 
   @override
   void initState() {
@@ -82,8 +84,47 @@ class _RollHomeState extends State<RollHome> {
           offstage: index != 1,
           child: TickerMode(
             enabled: index == 1,
-            child:
-                Text(widget.rolls.getExpectedNames(widget.rollname).toString()),
+            child: ListView(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.rolls.getCadetsAway(widget.rollname).length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(widget.rolls
+                            .getCadetsAway(widget.rollname)
+                            .elementAt(index)),
+                      ),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+        Offstage(
+          offstage: index != 2,
+          child: TickerMode(
+            enabled: index == 2,
+            child: ListView(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount:
+                      widget.rolls.getExpectedNames(widget.rollname).length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(widget.rolls
+                            .getExpectedNames(widget.rollname)
+                            .elementAt(index)),
+                      ),
+                    );
+                  },
+                )
+              ],
+            ),
           ),
         )
       ]),
@@ -96,6 +137,7 @@ class _RollHomeState extends State<RollHome> {
         },
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
+          BottomNavigationBarItem(icon: Icon(Icons.sick), label: 'away'),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: 'info'),
         ],
       ),
