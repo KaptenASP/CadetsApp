@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:cadets/Constants/cadetnet_api.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -9,13 +11,15 @@ class Roll {
   final String title;
   bool synced;
   Set<String> attended;
+  Set<String> expected;
 
-  Roll(this.title, this.synced, this.attended);
+  Roll(this.title, this.synced, this.attended, this.expected);
 
   Map<String, dynamic> toJson() => {
         'title': title,
         'synced': synced,
         'attended': attended.toList(),
+        'expected': expected.toList(),
       };
 }
 
@@ -41,8 +45,8 @@ class Rolls {
       (jsonResult as Map<String, dynamic>).forEach((key, value) {
         value = (value as Map<String, dynamic>);
 
-        Roll roll = Roll(
-            key, value['synced'] as bool, Set<String>.from(value['attended']));
+        Roll roll = Roll(key, value['synced'] as bool,
+            Set<String>.from(value['attended']), {});
         _rolls[key] = roll;
         _rollNames.add(key);
       });
@@ -53,18 +57,36 @@ class Rolls {
     session.getCookies().then((value) =>
         session.login().then((value) => session.getActivities().then((value) {
               value["DataList"].forEach((entry) {
-                createRoll(entry["Name"], synced: true);
+                print(entry);
+                APIPostRequest req =
+                    CadetnetApi.getActivityAttendees(entry["Id"] as int);
+
+                session.getActivityAttendees(req).then((memberValues) {
+                  Set<String> ids = {};
+
+                  memberValues["DataList"].forEach((member) {
+                    ids.add("${member['Id']}");
+                  });
+
+                  print('IDS == $ids');
+
+                  createRoll(entry["Name"], synced: true, expected: ids);
+                  print(_rolls[entry["Name"]]?.toJson());
+                });
               });
             })));
   }
 
-  void createRoll(String rollname, {bool synced = false}) async {
+  void createRoll(String rollname,
+      {bool synced = false, Set<String>? expected}) async {
     if (_rolls.containsKey(rollname)) {
       _rolls[rollname]?.synced = synced;
+      _rolls[rollname]?.expected.addAll(expected ?? {});
+      _saveToJson();
       return;
     }
 
-    Roll roll = Roll(rollname, synced, {});
+    Roll roll = Roll(rollname, synced, {}, expected ?? {});
     _rolls[rollname] = roll;
     _rollNames.add(rollname);
     _saveToJson();
@@ -113,6 +135,13 @@ class Rolls {
     return _rolls[rollname]!
         .attended
         .map((e) => UserMappings.getName(e))
+        .toSet();
+  }
+
+  Set<String> getExpectedNames(String rollname) {
+    return _rolls[rollname]!
+        .expected
+        // .map((e) => UserMappings.getName(e))
         .toSet();
   }
 

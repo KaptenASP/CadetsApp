@@ -131,4 +131,14 @@ class Session {
 
     return json.decode(response.body);
   }
+
+  Future<Map> getActivityAttendees(APIPostRequest post) async {
+    http.Response response = await client.post(
+      Uri.parse(post.url),
+      headers: post.headers,
+      body: json.encode(post.data),
+    );
+
+    return json.decode(response.body);
+  }
 }

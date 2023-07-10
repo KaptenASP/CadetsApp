@@ -40,6 +40,7 @@ class _RollHomeState extends State<RollHome> {
       body: ListView(
         children: [
           Text(widget.rollname),
+          Text(widget.rolls.getExpectedNames(widget.rollname).toString()),
           _rollMarking,
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -65,6 +66,12 @@ class _RollHomeState extends State<RollHome> {
               );
             },
           ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'home'),
+          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'info'),
         ],
       ),
     );
