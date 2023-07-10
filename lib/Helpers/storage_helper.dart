@@ -5,9 +5,23 @@ import 'package:path_provider/path_provider.dart';
 
 import 'network_helper.dart';
 
+class Roll {
+  final String title;
+  bool synced;
+  Set<String> attended;
+
+  Roll(this.title, this.synced, this.attended);
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'synced': synced,
+        'attended': attended.toList(),
+      };
+}
+
 class Rolls {
-  final Map<String, Map<String, List<String>>> _rolls = {};
-  final List<String> _rollNames = [];
+  final Map<String, Roll> _rolls = {};
+  final Set<String> _rollNames = {};
   final Session session = Session();
 
   Future<void> loadData() async {
@@ -25,54 +39,62 @@ class Rolls {
 
       // Add casted entries into _rolls:
       (jsonResult as Map<String, dynamic>).forEach((key, value) {
-        // print(jsonResult..);
-        Map<String, List<String>> nestedMap = {};
+        value = (value as Map<String, dynamic>);
 
-        (value as Map<String, dynamic>).forEach((nestedKey, nestedValue) {
-          nestedMap[nestedKey] = List<String>.from(nestedValue);
-        });
-
-        _rolls[key] = nestedMap;
+        Roll roll = Roll(
+            key, value['synced'] as bool, Set<String>.from(value['attended']));
+        _rolls[key] = roll;
         _rollNames.add(key);
       });
     }
-
-    loadOnlineData();
   }
 
   Future<void> loadOnlineData() async {
     session.getCookies().then((value) =>
         session.login().then((value) => session.getActivities().then((value) {
               value["DataList"].forEach((entry) {
-                print(entry);
-                createRoll(entry["Name"]);
+                createRoll(entry["Name"], synced: true);
               });
             })));
   }
 
-  void createRoll(String rollname) async {
+  void createRoll(String rollname, {bool synced = false}) async {
     if (_rolls.containsKey(rollname)) {
+      _rolls[rollname]?.synced = synced;
       return;
     }
 
-    _rolls[rollname] = {'attended': []};
+    Roll roll = Roll(rollname, synced, {});
+    _rolls[rollname] = roll;
     _rollNames.add(rollname);
     _saveToJson();
   }
 
   void deleteRoll(String rollname) async {
+    if (_rolls.containsKey(rollname) && _rolls[rollname]!.synced) {
+      return;
+    }
+
     _rolls.remove(rollname);
     _rollNames.remove(rollname);
     _saveToJson();
   }
 
   void saveId(String rollname, String id) async {
-    _rolls[rollname]?['attended']?.add(id);
+    _rolls[rollname]?.attended.add(id);
     _saveToJson();
   }
 
   Future<void> _saveToJson() async {
-    final jsonData = jsonEncode(_rolls);
+    Map<String, dynamic> _rollsJsonified = {};
+
+    for (MapEntry<String, Roll> element in _rolls.entries) {
+      _rollsJsonified.addAll({element.key: element.value.toJson()});
+    }
+
+    print(_rollsJsonified);
+
+    final jsonData = json.encode(_rollsJsonified);
 
     // Get the documents directory path
     final directory = await getApplicationDocumentsDirectory();
@@ -84,16 +106,18 @@ class Rolls {
   }
 
   Set<String> getAttended(String rollname) {
-    return Set<String>.from(_rolls[rollname]?['attended'] as Iterable);
+    return _rolls[rollname]!.attended;
   }
 
   Set<String> getAttendedNames(String rollname) {
-    return Set<String>.from(_rolls[rollname]?['attended']
-        ?.map((e) => UserMappings.getName(e)) as Iterable);
+    return _rolls[rollname]!
+        .attended
+        .map((e) => UserMappings.getName(e))
+        .toSet();
   }
 
   Map<String, dynamic> get rolls => _rolls;
-  List<String> get rollnames => _rollNames;
+  Set<String> get rollnames => _rollNames;
 }
 
 class UserMappings {
