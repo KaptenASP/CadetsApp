@@ -30,27 +30,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Rolls _rolls = Rolls();
-  late List<String> _rollnames = [];
   TextEditingController rollNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _rolls.loadData().then((value) {
-      _rollnames = _rolls.rollnames;
+      setState(() {});
+    });
+
+    _rolls.loadOnlineData().then((value) {
       setState(() {});
     });
   }
 
   void createRoll(String rollname) {
     _rolls.createRoll(rollname);
-    _rollnames = _rolls.rollnames;
     setState(() {});
   }
 
   void deleteRoll(String rollname) {
     _rolls.deleteRoll(rollname);
-    _rollnames = _rolls.rollnames;
     setState(() {});
   }
 
@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> {
       ),
       body: ListView(
         scrollDirection: Axis.vertical,
-        children: _rollnames
+        children: (_rolls.rolls.entries as Iterable<MapEntry<String, Roll>>)
             .map((e) => Card(
                   clipBehavior: Clip.hardEdge,
                   child: InkWell(
@@ -142,17 +142,21 @@ class _HomePageState extends State<HomePage> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => RollHome(
-                                  rollname: e,
+                                  rollname: e.value.title,
                                   rolls: _rolls,
                                 )),
                       );
-                      debugPrint('card name: $e');
+                      debugPrint(
+                          'card name: ${e.value.title} -- ${e.value.synced}');
                       debugPrint('Card tapped.');
                     },
                     child: SizedBox(
                       width: 300,
                       height: 100,
-                      child: Center(child: Text(e)),
+                      child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                              "${e.value.synced ? '🟢' : '🟠'} ${e.value.title}")),
                     ),
                   ),
                 ))
