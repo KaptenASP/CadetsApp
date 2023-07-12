@@ -1,13 +1,12 @@
-import 'Helpers/storage_helper.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter/material.dart';
+import 'Rolls/roll.dart';
+import 'Rolls/user_mappings.dart';
 
 class RollHome extends StatefulWidget {
   final String rollname;
-  final Rolls rolls;
 
-  const RollHome({Key? key, required this.rollname, required this.rolls})
-      : super(key: key);
+  const RollHome({Key? key, required this.rollname}) : super(key: key);
 
   @override
   State<RollHome> createState() => _RollHomeState();
@@ -15,7 +14,7 @@ class RollHome extends StatefulWidget {
 
 class _RollHomeState extends State<RollHome> {
   static final UserMappings _userMappings = UserMappings();
-  late final RollMarking _rollMarking;
+  static late RollMarking _rollMarking;
   final GlobalKey<_RollMarkingState> _rollMarkingKey = GlobalKey();
   int index = 0;
   bool viewAwayCadets = false;
@@ -23,17 +22,14 @@ class _RollHomeState extends State<RollHome> {
   @override
   void initState() {
     super.initState();
-    _userMappings.loadData().then((value) {
-      setState(() {});
-    });
     _rollMarking = RollMarking(
-        userMappings: _userMappings,
-        rolls: widget.rolls,
-        rollname: widget.rollname,
-        onAddAttendee: (String id) {
-          setState(() {});
-        },
-        key: _rollMarkingKey);
+      userMappings: _userMappings,
+      rollname: widget.rollname,
+      onAddAttendee: (String id) {
+        setState(() {});
+      },
+      key: _rollMarkingKey,
+    );
   }
 
   @override
@@ -64,14 +60,14 @@ class _RollHomeState extends State<RollHome> {
                 ),
                 ListView.builder(
                   shrinkWrap: true,
-                  itemCount:
-                      widget.rolls.getAttendedNames(widget.rollname).length,
+                  itemCount: RollManager.getAttendees(widget.rollname).length,
                   itemBuilder: (context, index) {
                     return Card(
                       child: ListTile(
-                        title: Text(widget.rolls
-                            .getAttendedNames(widget.rollname)
-                            .elementAt(index)),
+                        title: Text(
+                          RollManager.getAttendees(widget.rollname)
+                              .elementAt(index),
+                        ),
                       ),
                     );
                   },
@@ -84,22 +80,17 @@ class _RollHomeState extends State<RollHome> {
           offstage: index != 1,
           child: TickerMode(
             enabled: index == 1,
-            child: ListView(
-              children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: widget.rolls.getCadetsAway(widget.rollname).length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        title: Text(widget.rolls
-                            .getCadetsAway(widget.rollname)
-                            .elementAt(index)),
-                      ),
-                    );
-                  },
-                )
-              ],
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: RollManager.getCadetsAway(widget.rollname).length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    title: Text(RollManager.getCadetsAway(widget.rollname)
+                        .elementAt(index)),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -107,23 +98,20 @@ class _RollHomeState extends State<RollHome> {
           offstage: index != 2,
           child: TickerMode(
             enabled: index == 2,
-            child: ListView(
-              children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount:
-                      widget.rolls.getExpectedNames(widget.rollname).length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        title: Text(widget.rolls
-                            .getExpectedNames(widget.rollname)
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount:
+                  RollManager.getExpectedAttendees(widget.rollname).length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                        RollManager.getExpectedAttendees(widget.rollname)
                             .elementAt(index)),
-                      ),
-                    );
-                  },
-                )
-              ],
+                  ),
+                );
+              },
             ),
           ),
         )
@@ -148,7 +136,6 @@ class _RollHomeState extends State<RollHome> {
 class RollMarking extends StatefulWidget {
   final UserMappings userMappings;
   final void Function(String) onAddAttendee;
-  final Rolls rolls;
   final String rollname;
   @override
   final GlobalKey<_RollMarkingState> key;
@@ -156,7 +143,6 @@ class RollMarking extends StatefulWidget {
   const RollMarking(
       {required this.userMappings,
       required this.onAddAttendee,
-      required this.rolls,
       required this.rollname,
       required this.key})
       : super(key: key);
@@ -171,26 +157,21 @@ class RollMarking extends StatefulWidget {
 }
 
 class _RollMarkingState extends State<RollMarking> {
-  Set<String> _attended = {};
   String _lastSuccessfulMark = "";
 
   @override
   void initState() {
     super.initState();
-    _attended = widget.rolls.getAttended(widget.rollname);
     _lastSuccessfulMark =
-        _attended.isNotEmpty ? UserMappings.getName(_attended.last) : '';
+        RollManager.getAttendees(widget.rollname).last.toString();
   }
 
   void addAttendee(String id) {
     setState(() {
-      if (UserMappings.getName(id) == '') {
-        return;
-      }
-
-      if (_attended.add(id)) {
-        widget.rolls.saveId(widget.rollname, id);
-      }
+      RollManager.addAttendee(
+        widget.rollname,
+        id,
+      );
       _lastSuccessfulMark = UserMappings.getName(id);
     });
     widget.onAddAttendee(id);
@@ -232,13 +213,22 @@ class _SearchCadetState extends State<SearchCadet> {
         if (textEditingValue.text == '') {
           return const Iterable<String>.empty();
         }
-        return widget.userMappings.options.where((String option) {
-          return option.contains(textEditingValue.text.toLowerCase());
-        });
+        // Match lowercase but return in the same case
+        return UserMappings.getAllNames().where(
+          (String option) {
+            return option.toLowerCase().contains(
+                  textEditingValue.text.toLowerCase(),
+                );
+          },
+        );
       },
       onSelected: (String selection) {
+        debugPrint('');
+        debugPrint('');
         debugPrint('You just selected $selection');
         debugPrint(UserMappings.getId(selection));
+        debugPrint('');
+        debugPrint('');
         widget.rollMarking.addAttendee(UserMappings.getId(selection));
       },
       fieldViewBuilder: (BuildContext context,

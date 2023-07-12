@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'rolls.dart';
-import 'Helpers/storage_helper.dart';
+import 'attendance_marker.dart';
+import 'Rolls/roll.dart';
+import 'Rolls/user_mappings.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,28 +30,22 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final Rolls _rolls = Rolls();
+  final RollManager rollManager = RollManager();
+  final UserMappings userMappings = UserMappings();
   TextEditingController rollNameController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _rolls.loadData().then((value) {
-      setState(() {});
-    });
-
-    // _rolls.loadOnlineData().then((value) {
-    //   setState(() {});
-    // });
   }
 
   void createRoll(String rollname) {
-    _rolls.createRoll(rollname);
+    RollManager.createRoll(rollname);
     setState(() {});
   }
 
   void deleteRoll(String rollname) {
-    _rolls.deleteRoll(rollname);
+    RollManager.deleteRoll(rollname);
     setState(() {});
   }
 
@@ -130,37 +125,42 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: ListView(
-        scrollDirection: Axis.vertical,
-        children: (_rolls.rolls.entries as Iterable<MapEntry<String, Roll>>)
-            .map((e) => Card(
-                  clipBehavior: Clip.hardEdge,
-                  child: InkWell(
-                    splashColor: Colors.blue.withAlpha(30),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => RollHome(
-                                  rollname: e.value.title,
-                                  rolls: _rolls,
-                                )),
-                      );
-                      debugPrint(
-                          'card name: ${e.value.title} -- ${e.value.synced}');
-                      debugPrint('Card tapped.');
-                    },
-                    child: SizedBox(
-                      width: 300,
-                      height: 100,
-                      child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                              "${e.value.synced ? '🟢' : '🟠'} ${e.value.title}")),
+      body: RefreshIndicator(
+        onRefresh: () {
+          return Future.delayed(const Duration(milliseconds: 200), () {
+            setState(() {});
+          });
+        },
+        child: ListView(
+          scrollDirection: Axis.vertical,
+          children: (RollManager.rolls)
+              .map((e) => Card(
+                    clipBehavior: Clip.hardEdge,
+                    child: InkWell(
+                      splashColor: Colors.blue.withAlpha(30),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => RollHome(
+                                    rollname: e.title,
+                                  )),
+                        );
+                        debugPrint('card name: ${e.title} -- ${e.synced}');
+                        debugPrint('Card tapped.');
+                      },
+                      child: SizedBox(
+                        width: 300,
+                        height: 100,
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child:
+                                Text("${e.synced ? '🟢' : '🟠'} ${e.title}")),
+                      ),
                     ),
-                  ),
-                ))
-            .toList(),
+                  ))
+              .toList(),
+        ),
       ),
     );
   }
