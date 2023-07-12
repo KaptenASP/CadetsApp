@@ -38,7 +38,7 @@ class Roll {
 }
 
 class RollManager {
-  static final Set<Roll> rolls = {};
+  static final Set<Roll> _rolls = {};
   static final Session session = Session();
 
   RollManager() {
@@ -49,7 +49,7 @@ class RollManager {
       }
 
       for (var entry in (jsonResult as Map<String, dynamic>).entries) {
-        rolls.add(Roll.fromJson(entry));
+        _rolls.add(Roll.fromJson(entry));
       }
     });
 
@@ -75,7 +75,12 @@ class RollManager {
                             });
 
                             // Add member to roll
-                            rolls.add(Roll(activity["Name"], true, {}, ids));
+                            if (rollExists(activity["Name"])) {
+                              updateRoll(activity["Name"],
+                                  synced: true, expected: ids);
+                            } else {
+                              _rolls.add(Roll(activity["Name"], true, {}, ids));
+                            }
                           },
                         );
                       },
@@ -86,20 +91,24 @@ class RollManager {
         );
   }
 
-  bool rollExists(String rollname) {
-    return rolls.map((e) => e.title).contains(rollname);
+  static void addAttendee(String rollname, String id) {
+    getRoll(rollname)._attended.add(id);
   }
 
-  Roll getRoll(String rollname) {
-    return rolls.firstWhere((element) => element.title == rollname);
+  static bool rollExists(String rollname) {
+    return _rolls.map((e) => e.title).contains(rollname);
   }
 
-  void createRoll(
+  static Roll getRoll(String rollname) {
+    return _rolls.firstWhere((element) => element.title == rollname);
+  }
+
+  static void createRoll(
     String rollname, {
     bool synced = false,
     Set<String>? expected,
   }) {
-    rolls.add(Roll(
+    _rolls.add(Roll(
       rollname,
       synced,
       {},
@@ -107,7 +116,7 @@ class RollManager {
     ));
   }
 
-  void updateRoll(
+  static void updateRoll(
     String rollname, {
     bool? synced,
     Set<String>? attended,
@@ -122,23 +131,42 @@ class RollManager {
     }
   }
 
-  Set<String> getAttendees(String rollname) {
-    return rollExists(rollname) ? getRoll(rollname).attended : {};
+  static void deleteRoll(String rollname) {
+    _rolls.removeWhere((element) => element.title == rollname);
   }
 
-  Set<String> getExpectedAttendees(String rollname) {
-    return rollExists(rollname) ? getRoll(rollname).expected : {};
+  static Set<String> getAttendees(String rollname) {
+    return rollExists(rollname)
+        ? getRoll(rollname)
+            .attended
+            .map((e) => UserMappings.getName(e))
+            .where((element) => element != "")
+            .toSet()
+        : {};
   }
 
-  Set<String> getCadetsAway(String rollname) {
-    return getExpectedAttendees(rollname)
-        .difference(getAttendees(rollname))
+  static Set<String> getExpectedAttendees(String rollname) {
+    return rollExists(rollname)
+        ? getRoll(rollname)
+            .expected
+            .map((e) => UserMappings.getName(e))
+            .where((element) => element != "")
+            .toSet()
+        : {};
+  }
+
+  static Set<String> getCadetsAway(String rollname) {
+    return getRoll(rollname)
+        .expected
+        .difference(getRoll(rollname).attended)
         .map((e) => UserMappings.getName(e))
         .where((element) => element != "")
         .toSet();
   }
 
-  bool isRollSynced(String rollname) {
+  static bool isRollSynced(String rollname) {
     return rollExists(rollname) ? getRoll(rollname).synced : false;
   }
+
+  static Set<Roll> get rolls => _rolls;
 }
