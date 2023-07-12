@@ -71,6 +71,25 @@ class _RollHomeState extends State<RollHome> {
                         side: BorderSide(color: Color(0xff30363d)),
                       ),
                       child: ListTile(
+                        // Pop up menu to remove cadets from the attended list
+                        trailing: PopupMenuButton(
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: "remove",
+                              child: Text("Remove"),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == "remove") {
+                              RollManager.deleteAttendee(
+                                  widget.rollname,
+                                  UserMappings.getId(
+                                      RollManager.getAttendees(widget.rollname)
+                                          .elementAt(index)));
+                              setState(() {});
+                            }
+                          },
+                        ),
                         title: Text(
                           RollManager.getAttendees(widget.rollname)
                               .elementAt(index),

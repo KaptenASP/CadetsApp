@@ -108,6 +108,11 @@ class RollManager {
     saveRolls();
   }
 
+  static void deleteAttendee(String rollname, String id) {
+    getRoll(rollname)._attended.remove(id);
+    saveRolls();
+  }
+
   static bool rollExists(String rollname) {
     return _rolls.map((e) => e.title).contains(rollname);
   }
