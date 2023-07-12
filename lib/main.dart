@@ -15,7 +15,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.dark,
+        // Convert from purple hue to blue hue
+        colorScheme: ColorScheme.fromSwatch(
+          brightness: Brightness.dark,
+          backgroundColor: const Color(0xff0d1117),
+          cardColor: const Color(0xff010409),
+        ),
       ),
       home: const HomePage(),
     );
@@ -135,9 +140,15 @@ class _HomePageState extends State<HomePage> {
           scrollDirection: Axis.vertical,
           children: (RollManager.rolls)
               .map((e) => Card(
+                    margin: const EdgeInsets.all(0),
+                    elevation: 0,
+                    color: const Color(0xff0d1117),
+                    shape: const RoundedRectangleBorder(
+                      side: BorderSide(color: Color(0xff30363d)),
+                    ),
                     clipBehavior: Clip.hardEdge,
                     child: InkWell(
-                      splashColor: Colors.blue.withAlpha(30),
+                      splashColor: const Color(0xff161b22),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -150,12 +161,26 @@ class _HomePageState extends State<HomePage> {
                         debugPrint('Card tapped.');
                       },
                       child: SizedBox(
-                        width: 300,
-                        height: 100,
+                        width: MediaQuery.of(context).size.width,
+                        height: 50,
                         child: Align(
+                            // Add some left padding to text
                             alignment: Alignment.centerLeft,
-                            child:
-                                Text("${e.synced ? '🟢' : '🟠'} ${e.title}")),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 20.0),
+                              child: Row(
+                                children: [
+                                  e.synced
+                                      ? const Icon(Icons.wifi_outlined,
+                                          color: Color(0xff7d8590))
+                                      : const Icon(Icons.wifi_off_outlined,
+                                          color: Color(0xff7d8590)),
+                                  Text(
+                                    '    ${e.title}',
+                                  ),
+                                ],
+                              ),
+                            )),
                       ),
                     ),
                   ))

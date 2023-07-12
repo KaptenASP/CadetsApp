@@ -12,7 +12,7 @@ class UserMappings {
   static Set<String> getAllNames() => _data.values.toSet();
 
   UserMappings() {
-    loadJsonData("mapper").then((jsonData) {
+    loadJsonData("mapper1").then((jsonData) {
       if (jsonData == Null) {
         Session session = Session();
         session.getCookies().then(
@@ -21,27 +21,33 @@ class UserMappings {
                       (value) {
                         value["DataList"].forEach(
                           (member) {
+                            print(member);
                             _data.addAll(
                               {
                                 member["MemberDisplay"].split(" - ")[1]:
                                     member["MemberDisplay"]
                               },
                             );
+                            writeJsonData(_data, "mapper1");
+
+                            for (MapEntry<String, String> element
+                                in _data.entries) {
+                              _reversedData
+                                  .addAll({element.value: element.key});
+                            }
                           },
                         );
                       },
                     ),
                   ),
             );
-
-        writeJsonData(_data, "mapper");
       } else {
         _data = Map<String, String>.from(jsonData);
+        for (MapEntry<String, String> element in _data.entries) {
+          _reversedData.addAll({element.value: element.key});
+        }
+        print(_data);
       }
     });
-
-    for (MapEntry<String, String> element in _data.entries) {
-      _reversedData.addAll({element.value: element.key});
-    }
   }
 }

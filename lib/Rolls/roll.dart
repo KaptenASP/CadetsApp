@@ -81,6 +81,8 @@ class RollManager {
                             } else {
                               _rolls.add(Roll(activity["Name"], true, {}, ids));
                             }
+
+                            saveRolls();
                           },
                         );
                       },
@@ -91,8 +93,19 @@ class RollManager {
         );
   }
 
+  static void saveRolls() {
+    Map<String, dynamic> json = {};
+
+    for (var roll in _rolls) {
+      json.addAll({roll.title: roll.toJson()});
+    }
+
+    writeJsonData(json, "rolls");
+  }
+
   static void addAttendee(String rollname, String id) {
     getRoll(rollname)._attended.add(id);
+    saveRolls();
   }
 
   static bool rollExists(String rollname) {
@@ -114,6 +127,7 @@ class RollManager {
       {},
       expected ?? {},
     ));
+    saveRolls();
   }
 
   static void updateRoll(
@@ -129,10 +143,12 @@ class RollManager {
         expected: expected,
       );
     }
+    saveRolls();
   }
 
   static void deleteRoll(String rollname) {
     _rolls.removeWhere((element) => element.title == rollname);
+    saveRolls();
   }
 
   static Set<String> getAttendees(String rollname) {

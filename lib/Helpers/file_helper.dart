@@ -21,6 +21,8 @@ Future<dynamic> loadJsonData(String filename) async {
 
 Future<void> writeJsonData(Map<String, dynamic> data, String filename) async {
   final jsonData = json.encode(data);
+  print("INSIDE WRITE FUNCTION");
+  print(jsonData);
 
   // Get the documents directory path
   final directory = await getApplicationDocumentsDirectory();
