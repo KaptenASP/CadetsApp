@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'attendance_marker.dart';
 import 'Rolls/roll.dart';
+import 'activity_home.dart';
 import 'Rolls/user_mappings.dart';
 
 void main() {
@@ -15,7 +15,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         useMaterial3: true,
-        // Convert from purple hue to blue hue
         colorScheme: ColorScheme.fromSwatch(
           brightness: Brightness.dark,
           backgroundColor: const Color(0xff0d1117),
@@ -153,8 +152,8 @@ class _HomePageState extends State<HomePage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => RollHome(
-                                    rollname: e.title,
+                              builder: (context) => ActivityHome(
+                                    activityName: e.title,
                                   )),
                         );
                         debugPrint('card name: ${e.title} -- ${e.synced}');
