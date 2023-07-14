@@ -21,7 +21,6 @@ class UserMappings {
                       (value) {
                         value["DataList"].forEach(
                           (member) {
-                            print(member);
                             _data.addAll(
                               {
                                 member["MemberDisplay"].split(" - ")[1]:
@@ -46,7 +45,6 @@ class UserMappings {
         for (MapEntry<String, String> element in _data.entries) {
           _reversedData.addAll({element.value: element.key});
         }
-        print(_data);
       }
     });
   }

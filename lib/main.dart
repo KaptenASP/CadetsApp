@@ -156,8 +156,6 @@ class _HomePageState extends State<HomePage> {
                                     activityName: e.title,
                                   )),
                         );
-                        debugPrint('card name: ${e.title} -- ${e.synced}');
-                        debugPrint('Card tapped.');
                       },
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
