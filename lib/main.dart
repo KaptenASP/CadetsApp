@@ -154,6 +154,7 @@ class _HomePageState extends State<HomePage> {
                           MaterialPageRoute(
                               builder: (context) => ActivityHome(
                                     activityName: e.title,
+                                    activityDate: e.date,
                                   )),
                         );
                       },
@@ -165,15 +166,27 @@ class _HomePageState extends State<HomePage> {
                             alignment: Alignment.centerLeft,
                             child: Padding(
                               padding: const EdgeInsets.only(left: 20.0),
-                              child: Row(
+                              child: Column(
                                 children: [
-                                  e.synced
-                                      ? const Icon(Icons.wifi_outlined,
-                                          color: Color(0xff7d8590))
-                                      : const Icon(Icons.wifi_off_outlined,
-                                          color: Color(0xff7d8590)),
+                                  Row(
+                                    children: [
+                                      e.synced
+                                          ? const Icon(Icons.wifi_outlined,
+                                              color: Color(0xff7d8590))
+                                          : const Icon(Icons.wifi_off_outlined,
+                                              color: Color(0xff7d8590)),
+                                      Text(
+                                        '    ${e.title}',
+                                      ),
+                                    ],
+                                  ),
+                                  // Date of activity
                                   Text(
-                                    '    ${e.title}',
+                                    '    ${e.date}',
+                                    style: const TextStyle(
+                                      color: Color(0xff7d8590),
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),

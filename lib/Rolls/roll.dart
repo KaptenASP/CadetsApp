@@ -5,25 +5,33 @@ import 'user_mappings.dart';
 
 class Roll {
   final String title;
+  String _date;
   bool _synced;
   final Set<String> _attended;
   final Set<String> _expected;
 
-  Roll(this.title, this._synced, this._attended, this._expected);
+  Roll(this.title, this._date, this._synced, this._attended, this._expected);
 
-  void updateRoll(
-      {bool? synced, Set<String>? attended, Set<String>? expected}) {
+  void updateRoll({
+    bool? synced,
+    String? date,
+    Set<String>? attended,
+    Set<String>? expected,
+  }) {
+    _date = date!;
     _synced = synced!;
     _attended.addAll(attended ?? {});
     _expected.addAll(expected ?? {});
   }
 
   bool get synced => _synced;
+  String get date => _date;
   Set<String> get attended => _attended;
   Set<String> get expected => _expected;
 
   Map<String, dynamic> toJson() => {
         'title': title,
+        'date': _date,
         'synced': _synced,
         'attended': attended.toList(),
         'expected': _expected.toList(),
@@ -31,6 +39,7 @@ class Roll {
 
   static Roll fromJson(MapEntry<String, dynamic> json) => Roll(
         json.key,
+        json.value['date'] as String,
         json.value['synced'] as bool,
         Set<String>.from(json.value['attended']),
         Set<String>.from(json.value['expected']),
@@ -38,7 +47,7 @@ class Roll {
 }
 
 class RollManager {
-  static final Set<Roll> _rolls = {};
+  static final List<Roll> _rolls = [];
   static final Session session = Session();
 
   RollManager() {
@@ -73,15 +82,37 @@ class RollManager {
                               ids.add(
                                   "${member['Member']['MemberDisplay'].split(' - ')[1]}");
                             });
+                            // print roll name
+                            print(activity["Name"]);
 
                             // Add member to roll
-                            if (rollExists(activity["Name"])) {
-                              updateRoll(activity["Name"],
-                                  synced: true, expected: ids);
+                            if (rollExists(
+                                activity["Name"],
+                                activity["StartDate"] ??
+                                    DateTime.now()
+                                        .toIso8601String()
+                                        .split("T")[0])) {
+                              updateRoll(
+                                  activity["Name"],
+                                  activity["StartDate"] ??
+                                      DateTime.now()
+                                          .toIso8601String()
+                                          .split("T")[0],
+                                  synced: true,
+                                  expected: ids);
                             } else {
-                              _rolls.add(Roll(activity["Name"], true, {}, ids));
+                              _rolls.add(Roll(
+                                activity["Name"],
+                                activity["StartDate"] ??
+                                    DateTime.now()
+                                        .toIso8601String()
+                                        .split("T")[0],
+                                true,
+                                {},
+                                ids,
+                              ));
                             }
-
+                            _rolls.sort((a, b) => a.date.compareTo(b.date));
                             saveRolls();
                           },
                         );
@@ -91,6 +122,8 @@ class RollManager {
                 ),
               ),
         );
+
+    _rolls.sort((a, b) => a.date.compareTo(b.date));
   }
 
   static void saveRolls() {
@@ -113,8 +146,14 @@ class RollManager {
     saveRolls();
   }
 
-  static bool rollExists(String rollname) {
-    return _rolls.map((e) => e.title).contains(rollname);
+  static bool rollExists(String rollname, String date) {
+    for (var roll in _rolls) {
+      if (roll.title == rollname && roll.date == date) {
+        return true;
+      }
+    }
+    return false;
+    // return _rolls.map((e) => e.title).contains(rollname);
   }
 
   static Roll getRoll(String rollname) {
@@ -128,21 +167,25 @@ class RollManager {
   }) {
     _rolls.add(Roll(
       rollname,
+      DateTime.now().toIso8601String().split("T")[0],
       synced,
       {},
       expected ?? {},
     ));
+    _rolls.sort((a, b) => a.date.compareTo(b.date));
     saveRolls();
   }
 
   static void updateRoll(
-    String rollname, {
+    String rollname,
+    String date, {
     bool? synced,
     Set<String>? attended,
     Set<String>? expected,
   }) {
-    if (rollExists(rollname)) {
+    if (rollExists(rollname, date)) {
       getRoll(rollname).updateRoll(
+        date: date,
         synced: synced,
         attended: attended,
         expected: expected,
@@ -156,8 +199,8 @@ class RollManager {
     saveRolls();
   }
 
-  static Set<String> getAttendees(String rollname) {
-    return rollExists(rollname)
+  static Set<String> getAttendees(String rollname, String rolldate) {
+    return rollExists(rollname, rolldate)
         ? getRoll(rollname)
             .attended
             .map((e) => UserMappings.getName(e))
@@ -166,8 +209,8 @@ class RollManager {
         : {};
   }
 
-  static Set<String> getExpectedAttendees(String rollname) {
-    return rollExists(rollname)
+  static Set<String> getExpectedAttendees(String rollname, String rolldate) {
+    return rollExists(rollname, rolldate)
         ? getRoll(rollname)
             .expected
             .map((e) => UserMappings.getName(e))
@@ -185,9 +228,9 @@ class RollManager {
         .toSet();
   }
 
-  static bool isRollSynced(String rollname) {
-    return rollExists(rollname) ? getRoll(rollname).synced : false;
+  static bool isRollSynced(String rollname, String date) {
+    return rollExists(rollname, date) ? getRoll(rollname).synced : false;
   }
 
-  static Set<Roll> get rolls => _rolls;
+  static List<Roll> get rolls => _rolls;
 }

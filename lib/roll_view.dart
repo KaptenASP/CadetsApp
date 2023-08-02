@@ -47,17 +47,19 @@ abstract class CadetListStrategy {
 
 class AttendedStrategy implements CadetListStrategy {
   String rollname;
+  String date;
 
-  AttendedStrategy(this.rollname);
+  AttendedStrategy(this.rollname, this.date);
 
   @override
-  Set<String> get cadets => RollManager.getAttendees(rollname);
+  Set<String> get cadets => RollManager.getAttendees(rollname, date);
 }
 
 class AbsentStrategy implements CadetListStrategy {
   String rollname;
+  String date;
 
-  AbsentStrategy(this.rollname);
+  AbsentStrategy(this.rollname, this.date);
 
   @override
   Set<String> get cadets => RollManager.getCadetsAway(rollname);
@@ -65,9 +67,10 @@ class AbsentStrategy implements CadetListStrategy {
 
 class ExpectedStrategy implements CadetListStrategy {
   String rollname;
+  String date;
 
-  ExpectedStrategy(this.rollname);
+  ExpectedStrategy(this.rollname, this.date);
 
   @override
-  Set<String> get cadets => RollManager.getExpectedAttendees(rollname);
+  Set<String> get cadets => RollManager.getExpectedAttendees(rollname, date);
 }

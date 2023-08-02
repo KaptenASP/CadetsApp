@@ -6,8 +6,11 @@ import 'search.dart';
 
 class ActivityHome extends StatefulWidget {
   final String activityName;
+  final String activityDate;
 
-  const ActivityHome({Key? key, required this.activityName}) : super(key: key);
+  const ActivityHome(
+      {Key? key, required this.activityName, required this.activityDate})
+      : super(key: key);
 
   @override
   State<ActivityHome> createState() => _ActivityHomeState();
@@ -35,18 +38,33 @@ class _ActivityHomeState extends State<ActivityHome> {
                     fontSize: 25,
                   ),
                 ),
-                const Row(
+                Row(
                   // Sync status of the activity
                   children: [
-                    Icon(Icons.sync_alt_outlined, color: Color(0xff8e8e8e)),
+                    const Icon(Icons.sync_alt_outlined,
+                        color: Color(0xff8e8e8e)),
                     Text(
-                      "   Not Synced",
-                      style: TextStyle(
+                      RollManager.getRoll(widget.activityName).synced
+                          ? "Synced"
+                          : "Not Synced",
+                      style: const TextStyle(
                         color: Color(0xff8e8e8e),
                       ),
                     ),
                   ],
                 ),
+                Row(
+                  // Date for the activity
+                  children: [
+                    const Icon(Icons.calendar_today, color: Color(0xff8e8e8e)),
+                    Text(
+                      RollManager.getRoll(widget.activityName).date,
+                      style: const TextStyle(
+                        color: Color(0xff8e8e8e),
+                      ),
+                    ),
+                  ],
+                )
               ]
                   .map(
                     // Align all widgets to top left and add padding
@@ -143,7 +161,8 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: AttendedStrategy(widget.activityName),
+                            strategy: AttendedStrategy(
+                                widget.activityName, widget.activityDate),
                           ),
                         ),
                       );
@@ -159,7 +178,8 @@ class _ActivityHomeState extends State<ActivityHome> {
                               style: TextStyle(
                                 fontSize: 18,
                               )),
-                          Text(RollManager.getAttendees(widget.activityName)
+                          Text(RollManager.getAttendees(
+                                  widget.activityName, widget.activityDate)
                               .length
                               .toString()),
                         ],
@@ -179,7 +199,8 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: AbsentStrategy(widget.activityName),
+                            strategy: AbsentStrategy(
+                                widget.activityName, widget.activityDate),
                           ),
                         ),
                       );
@@ -214,7 +235,8 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: ExpectedStrategy(widget.activityName),
+                            strategy: ExpectedStrategy(
+                                widget.activityName, widget.activityDate),
                           ),
                         ),
                       );
@@ -232,7 +254,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                             ),
                           ),
                           Text(RollManager.getExpectedAttendees(
-                                  widget.activityName)
+                                  widget.activityName, widget.activityDate)
                               .length
                               .toString())
                         ],
