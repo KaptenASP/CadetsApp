@@ -6,10 +6,10 @@ import 'search.dart';
 
 class ActivityHome extends StatefulWidget {
   final String activityName;
-  final String activityDate;
+  final int activityId;
 
   const ActivityHome(
-      {Key? key, required this.activityName, required this.activityDate})
+      {Key? key, required this.activityName, required this.activityId})
       : super(key: key);
 
   @override
@@ -44,7 +44,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                     const Icon(Icons.sync_alt_outlined,
                         color: Color(0xff8e8e8e)),
                     Text(
-                      RollManager.getRoll(widget.activityName).synced
+                      RollManager.getRoll(widget.activityId).synced
                           ? "Synced"
                           : "Not Synced",
                       style: const TextStyle(
@@ -58,7 +58,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                   children: [
                     const Icon(Icons.calendar_today, color: Color(0xff8e8e8e)),
                     Text(
-                      RollManager.getRoll(widget.activityName).date,
+                      RollManager.getRoll(widget.activityId).date,
                       style: const TextStyle(
                         color: Color(0xff8e8e8e),
                       ),
@@ -100,8 +100,10 @@ class _ActivityHomeState extends State<ActivityHome> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            Scanner(rollname: widget.activityName),
+                        builder: (context) => Scanner(
+                          rollname: widget.activityName,
+                          activityId: widget.activityId,
+                        ),
                       ),
                     );
                   },
@@ -122,8 +124,10 @@ class _ActivityHomeState extends State<ActivityHome> {
                 child: InkWell(
                   onTap: () => showDialog(
                     context: context,
-                    builder: (BuildContext context) =>
-                        SearchCadet(rollname: widget.activityName),
+                    builder: (BuildContext context) => SearchCadet(
+                      rollname: widget.activityName,
+                      activityId: widget.activityId,
+                    ),
                   ),
                   child: const Row(
                     children: [
@@ -161,8 +165,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: AttendedStrategy(
-                                widget.activityName, widget.activityDate),
+                            strategy: AttendedStrategy(widget.activityId),
                           ),
                         ),
                       );
@@ -178,8 +181,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                               style: TextStyle(
                                 fontSize: 18,
                               )),
-                          Text(RollManager.getAttendees(
-                                  widget.activityName, widget.activityDate)
+                          Text(RollManager.getAttendees(widget.activityId)
                               .length
                               .toString()),
                         ],
@@ -199,8 +201,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: AbsentStrategy(
-                                widget.activityName, widget.activityDate),
+                            strategy: AbsentStrategy(widget.activityId),
                           ),
                         ),
                       );
@@ -216,7 +217,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                               fontSize: 18,
                             ),
                           ),
-                          Text(RollManager.getCadetsAway(widget.activityName)
+                          Text(RollManager.getCadetsAway(widget.activityId)
                               .length
                               .toString())
                         ],
@@ -235,8 +236,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => RollView(
-                            strategy: ExpectedStrategy(
-                                widget.activityName, widget.activityDate),
+                            strategy: ExpectedStrategy(widget.activityId),
                           ),
                         ),
                       );
@@ -254,7 +254,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                             ),
                           ),
                           Text(RollManager.getExpectedAttendees(
-                                  widget.activityName, widget.activityDate)
+                                  widget.activityId)
                               .length
                               .toString())
                         ],

@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                           MaterialPageRoute(
                               builder: (context) => ActivityHome(
                                     activityName: e.title,
-                                    activityDate: e.date,
+                                    activityId: e.activityId,
                                   )),
                         );
                       },

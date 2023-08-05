@@ -46,31 +46,28 @@ abstract class CadetListStrategy {
 }
 
 class AttendedStrategy implements CadetListStrategy {
-  String rollname;
-  String date;
+  int id;
 
-  AttendedStrategy(this.rollname, this.date);
+  AttendedStrategy(this.id);
 
   @override
-  Set<String> get cadets => RollManager.getAttendees(rollname, date);
+  Set<String> get cadets => RollManager.getAttendees(id);
 }
 
 class AbsentStrategy implements CadetListStrategy {
-  String rollname;
-  String date;
+  int id;
 
-  AbsentStrategy(this.rollname, this.date);
+  AbsentStrategy(this.id);
 
   @override
-  Set<String> get cadets => RollManager.getCadetsAway(rollname);
+  Set<String> get cadets => RollManager.getCadetsAway(id);
 }
 
 class ExpectedStrategy implements CadetListStrategy {
-  String rollname;
-  String date;
+  int id;
 
-  ExpectedStrategy(this.rollname, this.date);
+  ExpectedStrategy(this.id);
 
   @override
-  Set<String> get cadets => RollManager.getExpectedAttendees(rollname, date);
+  Set<String> get cadets => RollManager.getExpectedAttendees(id);
 }
