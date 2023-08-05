@@ -51,6 +51,7 @@ class Roll {
 }
 
 class RollManager {
+  static int _rollId = 0;
   static final List<Roll> _rolls = [];
   static final Session session = Session();
 
@@ -121,6 +122,15 @@ class RollManager {
     _rolls.sort((a, b) => a.date.compareTo(b.date));
   }
 
+  static int getNextActivityId() {
+    List<int> ids = _rolls.map((e) => e.activityId).toList();
+    while (ids.contains(_rollId)) {
+      _rollId++;
+    }
+
+    return _rollId;
+  }
+
   static void saveRolls() {
     Map<String, dynamic> json = {};
 
@@ -154,15 +164,19 @@ class RollManager {
     bool synced = false,
     Set<String>? expected,
   }) {
-    // _rolls.add(Roll(
-    //   rollname,
-    //   DateTime.now().toIso8601String().split("T")[0],
-    //   synced,
-    //   {},
-    //   expected ?? {},
-    // ));
-    // _rolls.sort((a, b) => a.date.compareTo(b.date));
-    // saveRolls();
+    _rolls.add(
+      Roll(
+        rollname,
+        getNextActivityId(),
+        DateTime.now().toIso8601String().split("T")[0],
+        false,
+        {},
+        expected ?? UserMappings.getAllIds(),
+      ),
+    );
+    _rollId++;
+    _rolls.sort((a, b) => a.date.compareTo(b.date));
+    saveRolls();
   }
 
   static void updateRoll(
