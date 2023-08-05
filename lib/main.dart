@@ -183,7 +183,7 @@ class _HomePageState extends State<HomePage> {
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      e.date.split('T')[0],
+                                      e.dateString,
                                       style: const TextStyle(
                                         color: Color(0xff7d8590),
                                         fontSize: 12,

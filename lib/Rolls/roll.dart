@@ -2,11 +2,14 @@ import 'package:cadets/Helpers/file_helper.dart';
 import 'package:cadets/Constants/cadetnet_api.dart';
 import '../Helpers/network_helper.dart';
 import 'user_mappings.dart';
+import 'package:intl/intl.dart';
 
 class Roll {
-  final String title;
+  static DateFormat format = DateFormat('dd MMM yyyy');
+
+  String title;
   final int activityId;
-  String _date;
+  DateTime _date;
   bool _synced;
   final Set<String> _attended;
   final Set<String> _expected;
@@ -15,11 +18,13 @@ class Roll {
       this._expected);
 
   void updateRoll({
+    String? title,
     bool? synced,
-    String? date,
+    DateTime? date,
     Set<String>? attended,
     Set<String>? expected,
   }) {
+    title = title!;
     _date = date!;
     _synced = synced!;
     _attended.addAll(attended ?? {});
@@ -27,7 +32,8 @@ class Roll {
   }
 
   bool get synced => _synced;
-  String get date => _date;
+  DateTime get date => _date;
+  String get dateString => format.format(_date);
   Set<String> get attended => _attended;
   Set<String> get expected => _expected;
   Set<String> get absent => _expected.difference(_attended);
@@ -42,7 +48,7 @@ class Roll {
 
   Map<String, dynamic> toJson() => {
         'title': title,
-        'date': _date,
+        'date': _date.toIso8601String(),
         'id': activityId,
         'synced': _synced,
         'attended': attended.toList(),
@@ -52,7 +58,7 @@ class Roll {
   static Roll fromJson(MapEntry<String, dynamic> json) => Roll(
         json.key,
         json.value['id'] as int,
-        json.value['date'] as String,
+        DateTime.parse(json.value['date']),
         json.value['synced'] as bool,
         Set<String>.from(json.value['attended']),
         Set<String>.from(json.value['expected']),
@@ -72,7 +78,7 @@ class RollManager {
       }
 
       for (var entry in (jsonResult as Map<String, dynamic>).entries) {
-        _rolls.add(Roll.fromJson(entry));
+        addRoll(Roll.fromJson(entry));
       }
     });
 
@@ -96,9 +102,9 @@ class RollManager {
                               ids.add(
                                   "${member['Member']['MemberDisplay'].split(' - ')[1]}");
                             });
-                            // print roll name
-                            String startDate = activity["StartDate"] ??
-                                DateTime.now().toIso8601String().split("T")[0];
+
+                            DateTime startDate =
+                                DateTime.parse(activity["StartDate"]);
 
                             // Add member to roll
                             if (rollExists(activity["Id"])) {
@@ -168,7 +174,7 @@ class RollManager {
       Roll(
         rollname,
         getNextActivityId(),
-        DateTime.now().toIso8601String().split("T")[0],
+        DateTime.now(),
         false,
         {},
         expected ?? UserMappings.getAllIds(),
@@ -181,12 +187,13 @@ class RollManager {
   static void updateRoll(
     int activityId, {
     String? rollname,
-    String? date,
+    DateTime? date,
     bool? synced,
     Set<String>? attended,
     Set<String>? expected,
   }) {
     getRoll(activityId).updateRoll(
+      title: rollname,
       date: date,
       synced: synced,
       attended: attended,
@@ -210,8 +217,16 @@ class RollManager {
       return;
     }
 
+    int idx =
+        _rolls.indexWhere((element) => element.date.compareTo(roll.date) > 0);
+
+    if (idx == -1) {
+      _rolls.add(roll);
+      return;
+    }
+
     _rolls.insert(
-      _rolls.indexWhere((element) => element.date.compareTo(roll.date) > 0),
+      idx,
       roll,
     );
   }

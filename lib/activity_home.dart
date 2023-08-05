@@ -53,7 +53,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                   children: [
                     const Icon(Icons.calendar_today, color: Color(0xff8e8e8e)),
                     Text(
-                      widget.roll.date.split("T")[0],
+                      widget.roll.dateString,
                       style: const TextStyle(
                         color: Color(0xff8e8e8e),
                       ),
