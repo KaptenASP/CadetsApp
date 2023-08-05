@@ -30,6 +30,15 @@ class Roll {
   String get date => _date;
   Set<String> get attended => _attended;
   Set<String> get expected => _expected;
+  Set<String> get absent => _expected.difference(_attended);
+
+  void addAttendee(String cadet) {
+    _attended.add(cadet);
+  }
+
+  void removeAttendee(String cadet) {
+    _attended.remove(cadet);
+  }
 
   Map<String, dynamic> toJson() => {
         'title': title,
@@ -141,16 +150,6 @@ class RollManager {
     writeJsonData(json, "rolls");
   }
 
-  static void addAttendee(int rollId, String id) {
-    getRoll(rollId)._attended.add(id);
-    saveRolls();
-  }
-
-  static void deleteAttendee(int rollId, String id) {
-    getRoll(rollId)._attended.remove(id);
-    saveRolls();
-  }
-
   static bool rollExists(int activityId) {
     return _rolls.map((e) => e.activityId).contains(activityId);
   }
@@ -198,39 +197,6 @@ class RollManager {
   static void deleteRoll(String rollname) {
     _rolls.removeWhere((element) => element.title == rollname);
     saveRolls();
-  }
-
-  static Set<String> getAttendees(int activityId) {
-    return rollExists(activityId)
-        ? getRoll(activityId)
-            .attended
-            .map((e) => UserMappings.getName(e))
-            .where((element) => element != "")
-            .toSet()
-        : {};
-  }
-
-  static Set<String> getExpectedAttendees(int activityId) {
-    return rollExists(activityId)
-        ? getRoll(activityId)
-            .expected
-            .map((e) => UserMappings.getName(e))
-            .where((element) => element != "")
-            .toSet()
-        : {};
-  }
-
-  static Set<String> getCadetsAway(int activityId) {
-    return getRoll(activityId)
-        .expected
-        .difference(getRoll(activityId).attended)
-        .map((e) => UserMappings.getName(e))
-        .where((element) => element != "")
-        .toSet();
-  }
-
-  static bool isRollSynced(int activityId) {
-    return rollExists(activityId) ? getRoll(activityId).synced : false;
   }
 
   static List<Roll> get rolls => _rolls;

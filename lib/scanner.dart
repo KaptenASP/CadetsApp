@@ -4,11 +4,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:cadets/Rolls/roll.dart';
 
 class Scanner extends StatefulWidget {
-  final String rollname;
-  final int activityId;
+  final Roll roll;
 
-  const Scanner({Key? key, required this.rollname, required this.activityId})
-      : super(key: key);
+  const Scanner({Key? key, required this.roll}) : super(key: key);
   @override
   _ScannerState createState() => _ScannerState();
 }
@@ -133,8 +131,7 @@ class _ScannerState extends State<Scanner> {
                     setState(() {
                       _lastSuccessfulMark =
                           UserMappings.getName('${barcode.rawValue}');
-                      RollManager.addAttendee(
-                          widget.activityId, '${barcode.rawValue}');
+                      widget.roll.addAttendee('${barcode.rawValue}');
                       setState(() {});
                     });
                   }

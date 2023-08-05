@@ -153,8 +153,7 @@ class _HomePageState extends State<HomePage> {
                           context,
                           MaterialPageRoute(
                               builder: (context) => ActivityHome(
-                                    activityName: e.title,
-                                    activityId: e.activityId,
+                                    roll: e,
                                   )),
                         );
                       },
@@ -181,11 +180,14 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   ),
                                   // Date of activity
-                                  Text(
-                                    '    ${e.date}',
-                                    style: const TextStyle(
-                                      color: Color(0xff7d8590),
-                                      fontSize: 12,
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      e.date.split('T')[0],
+                                      style: const TextStyle(
+                                        color: Color(0xff7d8590),
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
                                 ],

@@ -1,3 +1,4 @@
+import 'package:cadets/Rolls/user_mappings.dart';
 import 'package:flutter/material.dart';
 import 'package:cadets/Rolls/roll.dart';
 
@@ -46,28 +47,31 @@ abstract class CadetListStrategy {
 }
 
 class AttendedStrategy implements CadetListStrategy {
-  int id;
+  Roll roll;
 
-  AttendedStrategy(this.id);
+  AttendedStrategy(this.roll);
 
   @override
-  Set<String> get cadets => RollManager.getAttendees(id);
+  Set<String> get cadets =>
+      roll.attended.map((e) => UserMappings.getName(e)).toSet();
 }
 
 class AbsentStrategy implements CadetListStrategy {
-  int id;
+  Roll roll;
 
-  AbsentStrategy(this.id);
+  AbsentStrategy(this.roll);
 
   @override
-  Set<String> get cadets => RollManager.getCadetsAway(id);
+  Set<String> get cadets =>
+      roll.absent.map((e) => UserMappings.getName(e)).toSet();
 }
 
 class ExpectedStrategy implements CadetListStrategy {
-  int id;
+  Roll roll;
 
-  ExpectedStrategy(this.id);
+  ExpectedStrategy(this.roll);
 
   @override
-  Set<String> get cadets => RollManager.getExpectedAttendees(id);
+  Set<String> get cadets =>
+      roll.expected.map((e) => UserMappings.getName(e)).toSet();
 }

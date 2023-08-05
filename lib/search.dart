@@ -3,12 +3,9 @@ import 'Rolls/roll.dart';
 import 'Rolls/user_mappings.dart';
 
 class SearchCadet extends StatefulWidget {
-  final String rollname;
-  final int activityId;
+  final Roll roll;
 
-  const SearchCadet(
-      {Key? key, required this.rollname, required this.activityId})
-      : super(key: key);
+  const SearchCadet({Key? key, required this.roll}) : super(key: key);
 
   @override
   State<SearchCadet> createState() => _SearchCadetState();
@@ -98,8 +95,7 @@ class _SearchCadetState extends State<SearchCadet> {
                         ),
                         onSubmitted: (String value) {
                           _lastSuccessfulMark = value;
-                          RollManager.addAttendee(
-                              widget.activityId, UserMappings.getId(value));
+                          widget.roll.addAttendee(UserMappings.getId(value));
                           setState(() {});
                         },
                       ),
@@ -114,7 +110,7 @@ class _SearchCadetState extends State<SearchCadet> {
                       icon: const Icon(Icons.search),
                       onPressed: () {
                         _lastSuccessfulMark = textEditingController.text;
-                        RollManager.addAttendee(widget.activityId,
+                        widget.roll.addAttendee(
                             UserMappings.getId(textEditingController.text));
                         setState(() {});
                       },
