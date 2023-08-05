@@ -108,16 +108,17 @@ class RollManager {
                                   synced: true,
                                   expected: ids);
                             } else {
-                              _rolls.add(Roll(
-                                activity["Name"],
-                                activity["Id"],
-                                startDate,
-                                true,
-                                {},
-                                ids,
-                              ));
+                              addRoll(
+                                Roll(
+                                  activity["Name"],
+                                  activity["Id"],
+                                  startDate,
+                                  true,
+                                  {},
+                                  ids,
+                                ),
+                              );
                             }
-                            _rolls.sort((a, b) => a.date.compareTo(b.date));
                             saveRolls();
                           },
                         );
@@ -163,7 +164,7 @@ class RollManager {
     bool synced = false,
     Set<String>? expected,
   }) {
-    _rolls.add(
+    addRoll(
       Roll(
         rollname,
         getNextActivityId(),
@@ -174,7 +175,6 @@ class RollManager {
       ),
     );
     _rollId++;
-    _rolls.sort((a, b) => a.date.compareTo(b.date));
     saveRolls();
   }
 
@@ -197,6 +197,23 @@ class RollManager {
   static void deleteRoll(String rollname) {
     _rolls.removeWhere((element) => element.title == rollname);
     saveRolls();
+  }
+
+  static void addRoll(Roll roll) {
+    // Add the roll to the list using insert so that it is sorted
+    if (_rolls.contains(roll)) {
+      return;
+    }
+
+    if (_rolls.isEmpty) {
+      _rolls.add(roll);
+      return;
+    }
+
+    _rolls.insert(
+      _rolls.indexWhere((element) => element.date.compareTo(roll.date) > 0),
+      roll,
+    );
   }
 
   static List<Roll> get rolls => _rolls;
