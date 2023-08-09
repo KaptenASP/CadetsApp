@@ -173,7 +173,21 @@ class Session {
       headers: getRoll.headers,
     );
 
-    return json.decode(response2.body);
+    Map res = json.decode(response2.body);
+    res['Data']['ActivityGroupId'] = groupId;
+    return res;
+  }
+
+  Future<Map> saveNominalRoll(
+    APIPostRequest post,
+  ) async {
+    http.Response response = await client.post(
+      Uri.parse(post.url),
+      headers: post.headers,
+      body: json.encode(post.data),
+    );
+
+    return json.decode(response.body);
   }
 
   Future<Map> getActivityAttendees(APIPostRequest post) async {

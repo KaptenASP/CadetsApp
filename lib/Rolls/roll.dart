@@ -46,6 +46,42 @@ class Roll {
     _attended.remove(cadet);
   }
 
+  void markRoll(Map<dynamic, dynamic> data) {
+    int numAttended = 0;
+    int numLeave = 0;
+    int unmarked = 0;
+
+    for (Map<dynamic, dynamic> element in data["Entries"]) {
+      if (_attended.contains('${element["Attendee"]["Member"]["UID"]}')) {
+        element["Present"] = true;
+        element["Reason"] = null;
+        element["checked"] = false;
+        numAttended++;
+      } else if (_expected
+          .contains('${element["Attendee"]["Member"]["UID"]}')) {
+        element["Present"] = false;
+        element["Reason"] = null;
+        numLeave++;
+      } else {
+        element["Present"] = null;
+        unmarked++;
+      }
+
+      element["AttendeeId"] = element["Attendee"]["Id"];
+    }
+
+    data['RollMarkedById'] = 4177131;
+    data['RollTime'] = "19:00";
+    data['Attended'] = numAttended;
+    data['Absent'] = numLeave;
+    data['Unmarked'] = unmarked;
+    data['RollMarked'] = DateTime.now().toIso8601String().split('T')[0];
+
+    APIPostRequest request = CadetnetApi.saveNominalRoll(data);
+    Session session = Session.instance;
+    session.saveNominalRoll(request);
+  }
+
   Map<String, dynamic> toJson() => {
         'title': title,
         'date': _date.toIso8601String(),

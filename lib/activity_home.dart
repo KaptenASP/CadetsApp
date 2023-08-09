@@ -100,7 +100,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                         CadetnetApi.getRollGroups(widget.roll.activityId);
                     session
                         .getNominalRoll(getGroups, widget.roll.title)
-                        .then((value) => print(value));
+                        .then((value) => widget.roll.markRoll(value["Data"]));
                   },
                   child: const Row(
                     children: [
@@ -108,7 +108,7 @@ class _ActivityHomeState extends State<ActivityHome> {
                         Icons.qr_code,
                         color: Color(0xff2ea043),
                       ),
-                      Text("  Sync"),
+                      Text("  Submit Roll"),
                     ],
                   ),
                 ),
