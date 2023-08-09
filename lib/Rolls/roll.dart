@@ -68,7 +68,7 @@ class Roll {
 class RollManager {
   static int _rollId = 0;
   static final List<Roll> _rolls = [];
-  static final Session session = Session();
+  static final Session session = Session.instance;
 
   RollManager() {
     // Load all the file based data:

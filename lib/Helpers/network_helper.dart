@@ -90,6 +90,10 @@ class CadetNetSession extends http.BaseClient {
 }
 
 class Session {
+  // Implement singleton
+  Session._privateConstructor();
+  static final Session instance = Session._privateConstructor();
+
   static var client = CadetNetSession();
   static var api = CadetnetApi();
 
@@ -143,6 +147,33 @@ class Session {
     );
 
     return json.decode(response.body);
+  }
+
+  Future<Map> getNominalRoll(
+      APIGetRequest getGroups, String activityName) async {
+    http.Response response = await client.get(
+      Uri.parse(getGroups.url),
+      headers: getGroups.headers,
+    );
+
+    Map groups = json.decode(response.body);
+    int groupId = 0;
+
+    for (Map group in groups['DataList']) {
+      if (group['Name'] == activityName) {
+        groupId = group['Id'];
+        break;
+      }
+    }
+
+    APIGetRequest getRoll = CadetnetApi.getNominalRoll(groupId);
+
+    http.Response response2 = await client.get(
+      Uri.parse(getRoll.url),
+      headers: getRoll.headers,
+    );
+
+    return json.decode(response2.body);
   }
 
   Future<Map> getActivityAttendees(APIPostRequest post) async {

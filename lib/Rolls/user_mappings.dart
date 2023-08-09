@@ -14,7 +14,7 @@ class UserMappings {
   UserMappings() {
     loadJsonData("mapper1").then((jsonData) {
       if (jsonData == Null) {
-        Session session = Session();
+        Session session = Session.instance;
         session.getCookies().then(
               (value) => session.login().then(
                     (value) => session.getUserMapping().then(

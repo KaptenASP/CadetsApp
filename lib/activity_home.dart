@@ -1,3 +1,5 @@
+import 'package:cadets/Constants/cadetnet_api.dart';
+import 'package:cadets/Helpers/network_helper.dart';
 import 'package:cadets/Rolls/roll.dart';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
@@ -86,6 +88,31 @@ class _ActivityHomeState extends State<ActivityHome> {
           ),
           Column(
             children: [
+              Card(
+                // Open up the scanner page when tapped
+                elevation: 0,
+                color: const Color(0xff0d1117),
+                child: InkWell(
+                  onTap: () {
+                    Session session = Session.instance;
+                    // APIGetRequest getGroups, String activityName
+                    APIGetRequest getGroups =
+                        CadetnetApi.getRollGroups(widget.roll.activityId);
+                    session
+                        .getNominalRoll(getGroups, widget.roll.title)
+                        .then((value) => print(value));
+                  },
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.qr_code,
+                        color: Color(0xff2ea043),
+                      ),
+                      Text("  Sync"),
+                    ],
+                  ),
+                ),
+              ),
               Card(
                 // Open up the scanner page when tapped
                 elevation: 0,
