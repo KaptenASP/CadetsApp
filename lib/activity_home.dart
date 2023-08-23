@@ -72,6 +72,8 @@ class _ActivityHomeState extends State<ActivityHome> {
                           widget.roll.addAttendee('$element');
                         }
 
+                        RollManager.saveRolls();
+
                         setState(() {});
                       });
 

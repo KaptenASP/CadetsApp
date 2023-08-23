@@ -225,14 +225,12 @@ class RollManager {
     String? rollname,
     DateTime? date,
     bool? synced,
-    Set<String>? attended,
     Set<String>? expected,
   }) {
     getRoll(activityId).updateRoll(
       title: rollname,
       date: date,
       synced: synced,
-      attended: attended,
       expected: expected,
     );
   }
