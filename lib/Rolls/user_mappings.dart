@@ -12,34 +12,28 @@ class UserMappings {
   static Set<String> getAllNames() => _data.values.toSet();
 
   UserMappings() {
-    loadJsonData("mapper1").then((jsonData) {
-      if (jsonData == Null) {
+    loadFromStorage("mappings").then((jsonData) {
+      if (jsonData == null) {
         Session session = Session.instance;
-        session.getCookies().then(
-              (value) => session.login().then(
-                    (value) => session.getUserMapping().then(
-                      (value) {
-                        value["DataList"].forEach(
-                          (member) {
-                            _data.addAll(
-                              {
-                                member["MemberDisplay"].split(" - ")[1]:
-                                    member["MemberDisplay"]
-                              },
-                            );
-                            writeJsonData(_data, "mapper1");
+        session.getUserMapping().then(
+          (value) {
+            value["DataList"].forEach(
+              (member) {
+                _data.addAll(
+                  {
+                    member["MemberDisplay"].split(" - ")[1]:
+                        member["MemberDisplay"]
+                  },
+                );
+                saveToStorage("mappings", _data);
 
-                            for (MapEntry<String, String> element
-                                in _data.entries) {
-                              _reversedData
-                                  .addAll({element.value: element.key});
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ),
+                for (MapEntry<String, String> element in _data.entries) {
+                  _reversedData.addAll({element.value: element.key});
+                }
+              },
             );
+          },
+        );
       } else {
         _data = Map<String, String>.from(jsonData);
         for (MapEntry<String, String> element in _data.entries) {

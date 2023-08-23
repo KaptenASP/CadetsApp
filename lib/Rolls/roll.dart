@@ -92,7 +92,7 @@ class Roll {
       };
 
   static Roll fromJson(MapEntry<String, dynamic> json) => Roll(
-        json.key,
+        json.value['title'] as String,
         json.value['id'] as int,
         DateTime.parse(json.value['date']),
         json.value['synced'] as bool,
@@ -107,14 +107,13 @@ class RollManager {
   static final Session session = Session.instance;
 
   RollManager() {
-    // Load all the file based data:
-    loadJsonData("rolls").then((jsonResult) {
-      if (jsonResult == Null) {
+    loadFromStorage("rolls").then((value) {
+      if (value == null) {
         return;
       }
 
-      for (var entry in (jsonResult as Map<String, dynamic>).entries) {
-        addRoll(Roll.fromJson(entry));
+      for (MapEntry<String, dynamic> entry in value.entries) {
+        _rolls.add(Roll.fromJson(entry));
       }
     });
 
@@ -184,13 +183,12 @@ class RollManager {
   }
 
   static void saveRolls() {
-    Map<String, dynamic> json = {};
-
+    Map<String, dynamic> rolls = {};
     for (var roll in _rolls) {
-      json.addAll({roll.title: roll.toJson()});
+      rolls.addAll({'${roll.activityId}': roll.toJson()});
     }
 
-    writeJsonData(json, "rolls");
+    saveToStorage("rolls", rolls);
   }
 
   static bool rollExists(int activityId) {
