@@ -1,3 +1,5 @@
+import 'package:cadets/Constants/cadetnet_api.dart';
+import 'package:cadets/Helpers/network_helper.dart';
 import 'package:flutter/material.dart';
 import 'Rolls/roll.dart';
 import 'activity_home.dart';
@@ -198,6 +200,31 @@ class _HomePageState extends State<HomePage> {
                   ))
               .toList(),
         ),
+      ),
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
+          Session session = Session.instance;
+          session
+              .getAttendeesFromSheets(CadetnetApi.getAttendeeesFromSheets(2, 1))
+              .then((value) => print(value));
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person_outline),
+            selectedIcon: const Icon(Icons.person),
+            label: 'Profile',
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
       ),
     );
   }

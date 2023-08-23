@@ -1,10 +1,12 @@
 import 'package:cadets/Constants/cadetnet_api.dart';
 import 'package:cadets/Helpers/network_helper.dart';
 import 'package:cadets/Rolls/roll.dart';
+import 'package:cadets/Rolls/user_mappings.dart';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
 import 'roll_view.dart';
 import 'search.dart';
+import 'dart:convert';
 
 class ActivityHome extends StatefulWidget {
   final Roll roll;
@@ -16,11 +18,74 @@ class ActivityHome extends StatefulWidget {
 }
 
 class _ActivityHomeState extends State<ActivityHome> {
+  TextEditingController rollNameController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xff0d1117),
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          TextButton(
+            onPressed: () => showDialog<String>(
+              context: context,
+              builder: (BuildContext context) => AlertDialog(
+                title: const Text('Enter term and week'),
+                content: TextFormField(
+                  controller: rollNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter 1 1 for Term 1 Week 1',
+                  ),
+                  validator: (String? value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some text';
+                    }
+                    return null;
+                  },
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'Cancel'),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // createRoll(rollNameController.text);
+                      List<String> termWeek =
+                          rollNameController.text.split(" ");
+
+                      int term = int.parse(termWeek[0]);
+                      int week = int.parse(termWeek[1]);
+
+                      Session session = Session.instance;
+                      session
+                          .getAttendeesFromSheets(
+                              CadetnetApi.getAttendeeesFromSheets(term, week))
+                          .then((value) {
+                        List<dynamic> result = json.decode(value["result"]);
+
+                        for (var element in result) {
+                          if (UserMappings.getName('$element') == '') {
+                            continue;
+                          }
+
+                          widget.roll.addAttendee('$element');
+                        }
+
+                        setState(() {});
+                      });
+
+                      Navigator.pop(context, 'OK');
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            ),
+            child: const Text('Sync Sheets'),
+          ),
+        ],
+      ),
       body: ListView(
         children: [
           Container(

@@ -199,4 +199,13 @@ class Session {
 
     return json.decode(response.body);
   }
+
+  Future<Map> getAttendeesFromSheets(APIGetRequest get) async {
+    http.Response response = await client.get(
+      Uri.parse(get.url),
+      headers: get.headers,
+    );
+
+    return json.decode(response.body);
+  }
 }
