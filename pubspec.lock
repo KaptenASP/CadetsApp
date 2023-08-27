@@ -225,7 +225,7 @@ packages:
     source: hosted
     version: "0.6.7"
   json_store:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: json_store
       sha256: "5e3e9955ce92c0d9b57bfbc9243d7e5d864f4b6253c4096a7ab459895479535f"
@@ -470,7 +470,7 @@ packages:
     source: hosted
     version: "1.2.0"
   synchronized:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: synchronized
       sha256: "5fcbd27688af6082f5abd611af56ee575342c30e87541d0245f7ff99faa02c60"

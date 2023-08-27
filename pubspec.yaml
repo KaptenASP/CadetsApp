@@ -39,9 +39,10 @@ dependencies:
   cookie_jar: ^4.0.5
   intl: ^0.18.1
   shared_preferences: ^2.2.0
+  json_store:
+  synchronized: ^3.0.0
 
 dev_dependencies:
-  json_store:
 
   flutter_test:
     sdk: flutter

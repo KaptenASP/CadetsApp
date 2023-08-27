@@ -50,7 +50,6 @@ class _ActivityHomeState extends State<ActivityHome> {
                   ),
                   TextButton(
                     onPressed: () {
-                      // createRoll(rollNameController.text);
                       List<String> termWeek =
                           rollNameController.text.split(" ");
 
@@ -165,9 +164,13 @@ class _ActivityHomeState extends State<ActivityHome> {
                     // APIGetRequest getGroups, String activityName
                     APIGetRequest getGroups =
                         CadetnetApi.getRollGroups(widget.roll.activityId);
-                    session
-                        .getNominalRoll(getGroups, widget.roll.title)
-                        .then((value) => widget.roll.markRoll(value["Data"]));
+
+                    session.checkLogin().then((value) {
+                      if (!value) return;
+                      session
+                          .getNominalRoll(getGroups, widget.roll.title)
+                          .then((value) => widget.roll.markRoll(value["Data"]));
+                    });
                   },
                   child: const Row(
                     children: [

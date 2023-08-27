@@ -46,6 +46,9 @@ class Roll {
     _attended.remove(cadet);
   }
 
+  /// Marks the roll and sends it to cadetnet
+  /// @precondition: The roll is synced and the user is logged in to cadetnet
+  /// @postcondition: The roll is marked and sent to cadetnet
   void markRoll(Map<dynamic, dynamic> data) {
     int numAttended = 0;
     int numLeave = 0;
@@ -105,9 +108,10 @@ class RollManager {
   static int _rollId = 0;
   static final List<Roll> _rolls = [];
   static final Session session = Session.instance;
+  static const String savePath = "rolls";
 
   RollManager() {
-    loadFromStorage("rolls").then((value) {
+    loadFromStorage(savePath).then((value) {
       if (value == null) {
         return;
       }
@@ -117,60 +121,48 @@ class RollManager {
       }
     });
 
-    // Load all the online data:
-    session.getCookies().then(
-          (o1) => session.login().then(
-                (o2) => session.getActivities().then(
-                  (activities) {
-                    activities["DataList"].forEach(
-                      (activity) {
-                        // Get the attendees for that activity
-                        APIPostRequest req = CadetnetApi.postActivityAttendees(
-                            activity["Id"] as int);
-
-                        session.getActivityAttendees(req).then(
-                          (memberValues) {
-                            Set<String> ids = {};
-
-                            // Get the id of the member
-                            memberValues["DataList"].forEach((member) {
-                              ids.add(
-                                  "${member['Member']['MemberDisplay'].split(' - ')[1]}");
-                            });
-
-                            DateTime startDate =
-                                DateTime.parse(activity["StartDate"]);
-
-                            // Add member to roll
-                            if (rollExists(activity["Id"])) {
-                              updateRoll(activity["Id"],
-                                  rollname: activity["Name"],
-                                  date: startDate,
-                                  synced: true,
-                                  expected: ids);
-                            } else {
-                              addRoll(
-                                Roll(
-                                  activity["Name"],
-                                  activity["Id"],
-                                  startDate,
-                                  true,
-                                  {},
-                                  ids,
-                                ),
-                              );
-                            }
-                            saveRolls();
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-        );
+    syncOnline();
 
     _rolls.sort((a, b) => a.date.compareTo(b.date));
+  }
+
+  static Future<void> syncOnline() async {
+    bool loggedInCheck = await session.checkLogin();
+
+    if (!loggedInCheck) {
+      return;
+    }
+
+    Map<dynamic, dynamic> activities = await session.getActivities();
+
+    for (var activity in activities["DataList"]) {
+      Map<dynamic, dynamic> memberValues = await session.getActivityAttendees(
+          CadetnetApi.postActivityAttendees(activity["Id"] as int));
+
+      Set<String> ids = {};
+
+      memberValues["DataList"].forEach((member) {
+        ids.add("${member['Member']['MemberDisplay'].split(' - ')[1]}");
+      });
+
+      DateTime startDate = DateTime.parse(activity["StartDate"]);
+
+      if (rollExists(activity["Id"])) {
+        updateRoll(
+          activity["Id"],
+          rollname: activity["Name"],
+          date: startDate,
+          synced: true,
+          expected: ids,
+        );
+      } else {
+        addRoll(
+          Roll(activity["Name"], activity["Id"], startDate, true, {}, ids),
+        );
+      }
+    }
+
+    saveRolls();
   }
 
   static int getNextActivityId() {
@@ -183,12 +175,13 @@ class RollManager {
   }
 
   static void saveRolls() {
-    Map<String, dynamic> rolls = {};
+    Map<String, dynamic> r = {};
+
     for (var roll in _rolls) {
-      rolls.addAll({'${roll.activityId}': roll.toJson()});
+      r.addAll({'${roll.activityId}': roll.toJson()});
     }
 
-    saveToStorage("rolls", rolls);
+    saveToStorage(savePath, r);
   }
 
   static bool rollExists(int activityId) {

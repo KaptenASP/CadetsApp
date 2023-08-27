@@ -1,7 +1,9 @@
+import 'package:cadets/Auth/cadetnet_auth.dart';
 import 'package:http/http.dart' as http;
 import '../Constants/cadetnet_api.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'package:synchronized/synchronized.dart';
 
 class CadetNetSession extends http.BaseClient {
   final http.Client _client = http.Client();
@@ -97,6 +99,24 @@ class Session {
   static var client = CadetNetSession();
   static var api = CadetnetApi();
 
+  static var lock = Lock();
+
+  static bool loggedIn = false;
+
+  Future<bool> checkLogin() async {
+    return await lock.synchronized(() async {
+      if (loggedIn) return true;
+      if (!CadetNetAuth.instance.loaded)
+        await CadetNetAuth.instance.loadCredentials();
+
+      if (!CadetNetAuth.instance.hasCredentials) return false;
+
+      await getCookies();
+      await login();
+      return true;
+    });
+  }
+
   // Auth based calls
   Future<void> getCookies() async {
     await client.get(
@@ -116,6 +136,8 @@ class Session {
       body: api.postLogin.data,
       headers: api.postLogin.headers,
     );
+
+    loggedIn = true;
   }
 
   // User based calls
@@ -125,6 +147,7 @@ class Session {
       headers: api.getUserDetails.headers,
     );
 
+    print(response.body);
     return json.decode(response.body);
   }
 

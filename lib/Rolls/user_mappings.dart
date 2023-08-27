@@ -14,32 +14,29 @@ class UserMappings {
   UserMappings() {
     loadFromStorage("mappings").then((jsonData) {
       if (jsonData == null) {
-        Session session = Session.instance;
-        session.getUserMapping().then(
-          (value) {
-            value["DataList"].forEach(
-              (member) {
-                _data.addAll(
-                  {
-                    member["MemberDisplay"].split(" - ")[1]:
-                        member["MemberDisplay"]
-                  },
-                );
-                saveToStorage("mappings", _data);
-
-                for (MapEntry<String, String> element in _data.entries) {
-                  _reversedData.addAll({element.value: element.key});
-                }
-              },
-            );
-          },
-        );
+        syncOnline();
       } else {
         _data = Map<String, String>.from(jsonData);
-        for (MapEntry<String, String> element in _data.entries) {
-          _reversedData.addAll({element.value: element.key});
-        }
       }
+
+      for (MapEntry<String, String> element in _data.entries) {
+        _reversedData.addAll({element.value: element.key});
+      }
+    });
+  }
+
+  static Future<void> syncOnline() async {
+    Session session = Session.instance;
+    session.checkLogin().then((value) async {
+      if (!value) return;
+
+      Map<dynamic, dynamic> mappings = await session.getUserMapping();
+
+      mappings["DataList"].forEach((member) => _data.addAll(
+            {member["MemberDisplay"].split(" - ")[1]: member["MemberDisplay"]},
+          ));
+
+      saveToStorage("mappings", _data);
     });
   }
 }
