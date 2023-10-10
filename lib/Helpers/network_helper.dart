@@ -229,6 +229,8 @@ class Session {
       headers: get.headers,
     );
 
+    print(response.body);
+
     return json.decode(response.body);
   }
 }

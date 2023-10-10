@@ -85,6 +85,11 @@ class _ActivityHomeState extends State<ActivityHome> {
             ),
             child: const Text('Sync Sheets'),
           ),
+          TextButton(
+              onPressed: () {
+                widget.roll.toPdf();
+              },
+              child: const Text("Export"))
         ],
       ),
       body: ListView(

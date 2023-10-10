@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:cadets/Helpers/file_helper.dart';
 import 'package:cadets/Constants/cadetnet_api.dart';
 import '../Helpers/network_helper.dart';
 import 'user_mappings.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 class Roll {
   static DateFormat format = DateFormat('dd MMM yyyy');
@@ -40,10 +44,12 @@ class Roll {
 
   void addAttendee(String cadet) {
     _attended.add(cadet);
+    RollManager.saveRolls();
   }
 
   void removeAttendee(String cadet) {
     _attended.remove(cadet);
+    RollManager.saveRolls();
   }
 
   /// Marks the roll and sends it to cadetnet
@@ -102,6 +108,45 @@ class Roll {
         Set<String>.from(json.value['attended']),
         Set<String>.from(json.value['expected']),
       );
+
+  void toPdf() async {
+    final pdf = pw.Document();
+
+    pdf.addPage(pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      build: (pw.Context context) {
+        return <pw.Widget>[
+          pw.Text(
+            title,
+            style: pw.TextStyle(
+              fontSize: 30,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+          pw.Header(
+            level: 1,
+            child: pw.Text(dateString),
+          ),
+          pw.TableHelper.fromTextArray(
+            context: context,
+            data: <List<String>>[
+              <String>['Name', 'ID', 'Present'],
+              ...expected.map((e) => [
+                    UserMappings.getName(e),
+                    e,
+                    '',
+                  ]),
+            ],
+          ),
+        ];
+      },
+    ));
+
+    // Save the file
+
+    final file = File("example.pdf");
+    await file.writeAsBytes(await pdf.save());
+  }
 }
 
 class RollManager {
